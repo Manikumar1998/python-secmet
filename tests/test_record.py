@@ -2,8 +2,10 @@ from os import path
 from Bio import SeqIO
 from secmet.record import Record
 
+
 def get_testfile(filename):
     return path.join(path.dirname(__file__), 'data', filename)
+
 
 def test_init_empty():
     rec = Record()
