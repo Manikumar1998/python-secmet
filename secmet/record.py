@@ -4,6 +4,7 @@
 
 from Bio import SeqIO
 
+
 class Record(object):
     """A record containing secondary metabolite clusters"""
 
@@ -34,6 +35,16 @@ class Record(object):
             return self._record.id
         else:
             return "NO_ID_ASSIGNED"
+
+
+    @property
+    def seq(self):
+        """Pass through to seq_record object if available"""
+        if self._record is not None:
+            return self._record.seq
+        else:
+            return None
+
 
     @property
     def annotations(self):

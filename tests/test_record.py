@@ -11,6 +11,7 @@ def test_init_empty():
     rec = Record()
     assert isinstance(rec, Record)
     assert rec.id == "NO_ID_ASSIGNED"
+    assert rec.seq is None
     assert rec.annotations == {}
     assert rec.description == ""
     assert rec.clusters == []
@@ -22,6 +23,7 @@ def test_from_genbank():
     rec = Record.from_genbank(testfile)
     assert isinstance(rec, Record)
     assert rec.id == bp_rec.id
+    assert rec.seq == bp_rec.seq
     # SNAG: Can't compare Reference objects in Biopython :(
     # So delete them to make the test work.
     del rec.annotations['references']
