@@ -41,7 +41,7 @@ def test_gene():
     testfile = get_testfile('nisin.gbk')
     rec = Record.from_genbank(testfile)
     bp_rec = SeqIO.read(testfile, 'genbank')
-    bp_cds = [i for i in bp_rec.features if i.type == 'gene']
+    bp_gene = [i for i in bp_rec.features if i.type == 'gene']
     assert len(bp_cds) == len(rec.gene)
 
 def test_cds():
@@ -50,5 +50,29 @@ def test_cds():
     bp_rec = SeqIO.read(testfile, 'genbank')
     bp_cds = [i for i in bp_rec.features if i.type == 'CDS']
     assert len(bp_cds) == len(rec.CDS)
+
+def test_get_cds_from_gene():
+		testfile = get_testfile('nisin.gbk')
+		rec = Record.from_genbank(testfile)
+		bp_rec = SeqIO.read(testfile, 'genbank')
+		bp_gene = [i for i in bp_rec.features if i.type == 'gene']
+		bp_cds = [i for i in bp_rec.features if i.type == 'CDS']
+		#get gene name from bp_gene list
+		bp_gene_name = bp_gene[0].qualifiers.__getattribute__.__self__['gene'][0]
+		
+		#get cds name from bp_cds list
+		bp_cds_name = bp_cds[0].qualifiers.__getattribute__.__self__['gene'][0] 
+		
+		#compare bp_gene_name and bp_cds_name
+		assert bp_gene_name == bp_cds_name
+		
+		#compare bp_cds_name and secmet rec cds name
+		assert bp_cds_name == rec.get_cds_from_gene(bp_gene[0]).qualifiers.__getattribute__.__self__['gene'][0]
+
+
+
+
+
+
 
 

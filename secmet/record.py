@@ -71,7 +71,7 @@ class Record(object):
 
 	@property
 	def gene(self):
-		"""A list of secondary metabolite clusters present in the record"""
+		"""A list of secondary metabolite genes present in the record"""
 		if self._record is None:
 			return []
 		gene_list =[i for i in self._record.features if i.type == 'gene']
@@ -79,12 +79,14 @@ class Record(object):
 
 	@property
 	def CDS(self):
+		"""A list of secondary metabolite CDS present in the record"""
 		if self._record is None:
 			return []
 		CDS = [i for i in self._record.features if i.type == 'CDS']
 		return CDS
 
 	def get_cds_from_gene(self,gene):
+		"""Give the CDS corresponding to a particular gene"""
 		if type(gene) != type(self.gene[0]):
 			return None
 		else:
