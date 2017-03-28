@@ -36,3 +36,19 @@ def test_clusters():
     testfile = get_testfile('nisin.gbk')
     rec = Record.from_genbank(testfile)
     assert len(rec.clusters) == 1
+
+def test_gene():
+    testfile = get_testfile('nisin.gbk')
+    rec = Record.from_genbank(testfile)
+    bp_rec = SeqIO.read(testfile, 'genbank')
+    bp_cds = [i for i in bp_rec.features if i.type == 'gene']
+    assert len(bp_cds) == len(rec.gene)
+
+def test_cds():
+    testfile = get_testfile('nisin.gbk')
+    rec = Record.from_genbank(testfile)
+    bp_rec = SeqIO.read(testfile, 'genbank')
+    bp_cds = [i for i in bp_rec.features if i.type == 'CDS']
+    assert len(bp_cds) == len(rec.CDS)
+
+
