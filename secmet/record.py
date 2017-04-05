@@ -85,19 +85,22 @@ class Record(object):
 		CDS = [i for i in self._record.features if i.type == 'CDS']
 		return CDS
 
-	def get_cds_from_gene(self,gene):
+	def get_cds_from_gene(self,gene_list):
 		"""Give the CDS corresponding to a particular gene"""
-		if type(gene) != type(self.gene[0]):
-			return None
-		else:
-			gene_name = gene.qualifiers.__getattribute__.__self__['gene'][0]
-			cds = self.CDS
-			for i in cds:
-				if i.qualifiers.__getattribute__.__self__['gene'][0] == gene_name:
-					return i
-			return None
+		cds_list =[]
+		for gene in gene_list:
+			if type(gene) != type(self.gene[0]):
+				return None
+			else:
+				gene_name = gene.qualifiers.__getattribute__.__self__['gene'][0]
+				cds = self.CDS
+				for i in cds:
+					if i.qualifiers.__getattribute__.__self__['gene'][0] == gene_name:
+						cds_list.append(i)
+		return cds_list
 
 
+rec = Record.from_genbank('../tests/data/nisin.gbk')
 
 
 
