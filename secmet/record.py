@@ -84,6 +84,19 @@ class Record(object):
 			return []
 		CDS = [i for i in self._record.features if i.type == 'CDS']
 		return CDS
+        @property
+        def CDS_motif(self):
+                """A list of secondary metabolite cds_motifs present in the record"""
+                if self._record is None:
+                                return []
+                cds_motifs_list =[i for i in self._records.features if i.type == 'CDS_motif']
+                return cds_motifs_list
+        @property
+        def source(self):
+                if self._record is not None:
+                        return self._record.source
+                else:
+                        return None
 
 	def get_cds_from_gene(self,gene_list):
 		"""Give the CDS corresponding to a particular gene"""
