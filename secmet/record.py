@@ -148,3 +148,5 @@ class Record(object):
             return cds_list
 
 
+rec = Record.from_file('../tests/data/sequence.fasta','fasta')
+print rec.seq
