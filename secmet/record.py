@@ -27,6 +27,30 @@ class Record(object):
             rec = cls(seq_record=seq_record)
             return rec
 
+      @classmethod
+      def from_file(cls, filename,filetype):
+
+            """Initialise a record from a file of specified type
+
+            :param string filename:    file name of the file to read
+            :param string filetype:    Type of the inputfile
+            """
+            
+            filetype_list = ['gb','genbank','fasta','fas','fa','emb','embl']
+            if filetype in filetype_list:
+                        if filetype == 'gb' or filetype == 'genbank':
+                                type_of_file = 'genbank'
+                        elif filetype == 'fas' or filetype == 'fa' or filetype =='fasta':
+                                type_of_file = 'fasta'
+                        else:
+                                type_of_file = 'embl'
+                                
+                        seq_record = SeqIO.read(filename, type_of_file)
+                        rec = cls(seq_record=seq_record)
+                        return rec
+            else:
+                      return None
+
       @property
       def id(self):
             """Pass through to seq_record object if available"""
@@ -122,8 +146,5 @@ class Record(object):
                               if i.qualifiers.__getattribute__.__self__['gene'][0] == gene_name:
                                     cds_list.append(i)
             return cds_list
-
-
-rec = Record.from_genbank('../tests/data/nisin.gbk')
 
 
