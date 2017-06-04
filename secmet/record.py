@@ -13,8 +13,12 @@ class Record(object):
 
             :param seq_record:  :class:`Bio.SeqRecord.SeqRecord` to read
             :type seq_record:   :class:`Bio.SeqRecord.SeqRecord`
+            :param cluster_cds  :Dictionary that holds pointers to corresponding cluster objects
+            :param cds_array    :List that has the objects of type cluster_cds
             """
             self._record = seq_record
+            self.cluster_cds = {}
+            self.cds_array =[None for i in range(100)]      #Initialising the cds_array to None, Maximum 100 cluster features
 
 
       @classmethod
@@ -108,6 +112,7 @@ class Record(object):
                   return []
             CDS = [i for i in self._record.features if i.type == 'CDS']
             return CDS
+
       @property
       def CDS_motif(self):
                 """A list of secondary metabolite cds_motifs present in the record"""
@@ -147,6 +152,31 @@ class Record(object):
                                     cds_list.append(i)
             return cds_list
 
+      def make_cluster_cds_pair(self,cluster_object,cds_list):
+            """Links cluster objects with corresponding cds objects
+                  :param cluster object: cluster feature object
+                  :param cds_list  :  list of cds feature object linked to the cluster object
+            """
+            hash_value = self.hash_function(cluster_object)       #getting a hash_value which will the index of the list containing cluster_cds() class objects(cds_array)
 
-rec = Record.from_file('../tests/data/sequence.fasta','fasta')
-print rec.seq
+            self.cluster_cds[cluster_object.id]=hash_value   #linking hash_value(index of cds_array) and the unique id of the cluster object
+
+            self.cds_array[hash_value] = cluster_cds(cds_list,cluster_object.id) 
+            
+      def hash_function(a,b):
+            #Hash function yet to be defined based on the id of the cluster feature object
+            return 0
+      
+      def get_cds_from_cluster(self,cluster_object):
+            #Should return list of cds from given cluster object
+            return 
+      
+      
+
+class cluster_cds():
+      def __init__(self,cds_list=[],key=None):
+            self.cds_list = cds_list
+            self.key = key
+            
+
+rec = Record.from_file('../tests/data/nisin.gbk','genbank')
