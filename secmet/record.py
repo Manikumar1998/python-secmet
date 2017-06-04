@@ -17,7 +17,7 @@ class Record(object):
             :param cds_array    :List that has the objects of type cluster_cds
             """
             self._record = seq_record
-            self.cluster_cds = {}
+            self.cluster_cds_dict = {}
             self.cds_array =[None for i in range(100)]      #Initialising the cds_array to None, Maximum 100 cluster features
 
 
@@ -159,7 +159,7 @@ class Record(object):
             """
             hash_value = self.hash_function(cluster_object)       #getting a hash_value which will the index of the list containing cluster_cds() class objects(cds_array)
 
-            self.cluster_cds[cluster_object.id]=hash_value   #linking hash_value(index of cds_array) and the unique id of the cluster object
+            self.cluster_cds_dict[cluster_object.id]=hash_value   #linking hash_value(index of cds_array) and the unique id of the cluster object
 
             self.cds_array[hash_value] = cluster_cds(cds_list,cluster_object.id) 
             
@@ -168,11 +168,22 @@ class Record(object):
             return 0
       
       def get_cds_from_cluster(self,cluster_object):
-            #Should return list of cds from given cluster object
-            return 
-      
-      
+            pointer = self.cluster_cds_dict[cluster_object.id]
+            cds_object = self.cds_array[pointer]
 
+            return cds_object.cds_list
+      
+      def get_cluster_from_cds(self,cds_object):
+            for i in self.cds_array:
+                  if i != None:
+                     for j in i.cds_list:
+                              if j.qualifiers['product'][0] == cds_object.qualifiers['product'][0]:
+                                    for k in self.clusters:
+                                          if k.id == i.key:
+                                                return k
+ 
+      
+      
 class cluster_cds():
       def __init__(self,cds_list=[],key=None):
             self.cds_list = cds_list
@@ -180,3 +191,5 @@ class cluster_cds():
             
 
 rec = Record.from_file('../tests/data/nisin.gbk','genbank')
+
+
