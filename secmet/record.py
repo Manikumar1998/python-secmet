@@ -13,23 +13,10 @@ class Record(object):
 
             :param seq_record:  :class:`Bio.SeqRecord.SeqRecord` to read
             :type seq_record:   :class:`Bio.SeqRecord.SeqRecord`
-            :param cluster_cds  :Dictionary that holds pointers to corresponding cluster objects
             :param cds_array    :List that has the objects of type cluster_cds
             """
             self._record = seq_record
-            self.cluster_cds_dict = {}
-            self.cds_array =[None for i in range(100)]      #Initialising the cds_array to None, Maximum 100 cluster features
-
-
-      @classmethod
-      def from_genbank(cls, filename):
-            """Initialise a record from a GenBank file
-
-            :param string filename:    file name of the GenBank file to read
-            """
-            seq_record = SeqIO.read(filename, 'genbank')
-            rec = cls(seq_record=seq_record)
-            return rec
+            self.cds_array =[]      #Initialising the cds_array to None, Maximum 100 cluster features
 
       @classmethod
       def from_file(cls, filename,filetype):
@@ -39,7 +26,7 @@ class Record(object):
             :param string filename:    file name of the file to read
             :param string filetype:    Type of the inputfile
             """
-            
+
             filetype_list = ['gb','genbank','fasta','fas','fa','emb','embl']
             if filetype in filetype_list:
                         if filetype == 'gb' or filetype == 'genbank':
@@ -48,7 +35,7 @@ class Record(object):
                                 type_of_file = 'fasta'
                         else:
                                 type_of_file = 'embl'
-                                
+
                         seq_record = SeqIO.read(filename, type_of_file)
                         rec = cls(seq_record=seq_record)
                         return rec
@@ -154,42 +141,41 @@ class Record(object):
 
       def make_cluster_cds_pair(self,cluster_object,cds_list):
             """Links cluster objects with corresponding cds objects
-                  :param cluster object: cluster feature object
-                  :param cds_list  :  list of cds feature object linked to the cluster object
+                  :param cluster_cobject:  cluster object
+                  :param cds_list :  list of cds feature object linked to the cluster object
             """
-            hash_value = self.hash_function(cluster_object)       #getting a hash_value which will the index of the list containing cluster_cds() class objects(cds_array)
 
-            self.cluster_cds_dict[cluster_object.id]=hash_value   #linking hash_value(index of cds_array) and the unique id of the cluster object
+            self.cds_array.append(cluster_cds(cds_list,cluster_object.id))
 
-            self.cds_array[hash_value] = cluster_cds(cds_list,cluster_object.id) 
-            
-      def hash_function(a,b):
-            #Hash function yet to be defined based on the id of the cluster feature object
-            return 0
-      
       def get_cds_from_cluster(self,cluster_object):
-            pointer = self.cluster_cds_dict[cluster_object.id]
-            cds_object = self.cds_array[pointer]
+          """ Given a cluster feature object returns the corresponding CDS features list
+              :param cluster_object: cluster feature object
+          """
+          for i in self.cds_array:
+                if i .key == cluster_object.id:
+                    return i.cds_list
+                else:
+                    return None
 
-            return cds_object.cds_list
-      
       def get_cluster_from_cds(self,cds_object):
-            for i in self.cds_array:
-                  if i != None:
-                     for j in i.cds_list:
-                              if j.qualifiers['product'][0] == cds_object.qualifiers['product'][0]:
-                                    for k in self.clusters:
-                                          if k.id == i.key:
-                                                return k
- 
-      
-      
+          """ Given a cds feature object returns the corresponding cluster object
+              :param CDS object: CDS feature object
+          """
+          for cluster_cds_object in self.cds_array:
+               for cds_obj in cluster_cds_object.cds_list:
+                              if cds_obj.qualifiers['product'][0] == cds_object.qualifiers['product'][0]:
+                                    for cluster in self.clusters:
+                                          if cluster.id == cluster_cds_object.key:
+                                                return cluster
+
+
+
 class cluster_cds():
       def __init__(self,cds_list=[],key=None):
             self.cds_list = cds_list
             self.key = key
-            
+
 
 rec = Record.from_file('../tests/data/nisin.gbk','genbank')
-
-
+rec.make_cluster_cds_pair(rec.clusters[0],rec.CDS)
+print rec.get_cds_from_cluster(rec.clusters[0])
