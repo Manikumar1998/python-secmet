@@ -139,6 +139,23 @@ class Record(object):
                                     cds_list.append(i)
             return cds_list
 
+      def get_gene_from_cds(self,cds_list):
+            """Returns a list of gene features corresponding to a list of CDS features
+                :param cds_list : list of CDS features
+            """
+            gene_list =[]
+            for cds in cds_list:
+                  if type(cds) != type(self.CDS[0]):
+                        return None
+                  else:
+                        cds_name = cds.qualifiers['product'][0]
+                        gene = self.gene
+                        for i in gene:
+                              if i.qualifiers.__getattribute__.__self__['gene'][0].lower() == cds_name.lower():  #.lower() is used to overcome strings comparison
+                                                                                                                  # without considering the case of the alphabets
+                                    gene_list.append(i)
+            return gene_list
+
       def make_cluster_cds_pair(self,cluster_object,cds_list):
             """Links cluster objects with corresponding cds objects
                   :param cluster_cobject:  cluster object
@@ -178,4 +195,4 @@ class cluster_cds():
 
 rec = Record.from_file('../tests/data/nisin.gbk','genbank')
 rec.make_cluster_cds_pair(rec.clusters[0],rec.CDS)
-print rec.get_cds_from_cluster(rec.clusters[0])
+print rec.get_gene_from_cds(rec.CDS)
