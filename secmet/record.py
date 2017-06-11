@@ -147,14 +147,24 @@ class Record(object):
 
 
 	@classmethod
-	def from_genbank(cls, filename):
-	    """Initialise a record from a GenBank file
+	def from_file(cls, filename, filetype):
 
-	    :param string filename:    file name of the GenBank file to read
-	    """
-	    seq_record = SeqIO.read(filename, 'genbank')
-	    rec = cls(seq_record=seq_record)
-	    return rec
+		"""Initialise a record from a file of specified type
+
+		:param string filename:    file name of the file to read
+		:param string filetype:    Type of the inputfile
+		"""
+		if filetype in ['gb', 'genbank']:
+			type_of_file = 'genbank'
+		elif filetype in ['fa', 'fas', 'fasta']:
+			type_of_file = 'fasta'
+		elif filetype in ['emb', 'embl']:
+			type_of_file = 'embl'
+		else:
+			return None
+		seq_record = SeqIO.read(filename, type_of_file)
+		rec = cls(seq_record=seq_record)
+		return rec
 
 
 	@property
@@ -206,8 +216,8 @@ class Record(object):
 		if self._record is None:
 		    return []
 
-		clusters = [i for i in self._modified_features if i.type == 'CDS']
-		return clusters
+		cdss = [i for i in self._modified_features if i.type == 'CDS']
+		return cdss
 
 	@property
 	def to_biopython(self):
