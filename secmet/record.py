@@ -3,22 +3,14 @@
 """Secondary Metabolite Record Objects"""
 
 from Bio import SeqIO
+from Bio.SeqFeature import SeqFeature, FeatureLocation
 
 class Feature(object):
 	"""A Feature super class that expands to different subclasses"""
-	def __init__(self, feature):
-		""" Initialise a feature object
-			param feature: class 'Bio.SeqFeature.SeqFeature'
-		"""
-		self.feature = feature
-		self._qualifiers = self.feature.qualifiers
-		self.location = self.feature.location
-		self.type = self.feature.type
-
-	@property
-	def to_biopython(self):
-		"""Returns a Bio.SeqFeature.SeqFeature object of same feature"""
-		return [self.feature]
+	def __init__(self):
+		""" Initialise a feature object"""
+		self.location = FeatureLocation(0, 0)
+		self.type = None
 
 
 class GenericFeature(Feature):
@@ -29,18 +21,30 @@ class GenericFeature(Feature):
 		"""Initialise a GenericFeature
 			param feature: class 'Bio.SeqFeature.SeqFeature'
 		"""
-		if feature != None:
-			Feature.__init__(self, feature)
+		super(GenericFeature, self).__init__()
+		self._qualifiers = {}
+		if feature is not None:
+			self._qualifiers = feature.qualifiers
+			self.location = feature.location
+			self.type = feature.type
 
 	def add_qualifier(self, category, info):
 		"""Adds a qualifier to qualifiers dictionary"""
-		self._qualifiers[category] = [info]
-		return None
+		if isinstance(category, str) and isinstance(info, str):
+			self._qualifiers[category] = [info]
+			return None
 
 	def get_qualifier(self, category):
 		"""Returns a qualifier of given category"""
-		return self._qualifiers[category]
+		if category in self._qualifiers:
+			return self._qualifiers[category]
 
+	@property
+	def to_biopython(self):
+		"""Returns a Bio.SeqFeature.SeqFeature of given type of feature"""
+		Generic = SeqFeature(FeatureLocation(self.location.start, self.location.end), type=self.type)
+		Generic.qualifiers = self._qualifiers
+		return [Generic]
 
 class CDSFeature(Feature):
 	"""A CDSFeature subclasses Feature"""
@@ -49,31 +53,35 @@ class CDSFeature(Feature):
 		"""Initialise a CDSFeature
 			param feature: class 'Bio.SeqFeature.SeqFeature'
 		"""
-		Feature.__init__(self, feature)
-		if 'sec_met' in self._qualifiers:
-			self.sec_met = self._qualifiers['sec_met']
-		else:
-			self.sec_met = None
+		super(CDSFeature, self).__init__()
+		self.sec_met = []
+		self.locus_tag = None
+		self.product = None
+		self.protein_id = None
+		self.gene = None
+		self.cluster = None  #At present we are manually assigning it for checking
+		self._qualifiers = {}
+		self.type = 'CDS'
 
-		if 'locus_tag' in self._qualifiers:
-			self.locus_tag = self._qualifiers['locus_tag']
-		else:
-			self.locus_tag = None
+		if feature is not None:
 
-		if 'product' in self._qualifiers:
-			self.product = self._qualifiers['product'][0]
-		else:
-			self.product = None
+			self._qualifiers = feature.qualifiers
 
-		if 'protein_id' in self._qualifiers:
-			self.protein_id = self._qualifiers['protein_id'][0]
-		else:
-			self.protein_id = None
+			if 'sec_met' in self._qualifiers:
+				self.sec_met = self._qualifiers['sec_met']
 
-		if 'gene' in self._qualifiers:
-			self.gene = self._qualifiers['gene'][0]
-		else:
-			self.gene = None
+			if 'locus_tag' in self._qualifiers:
+				self.locus_tag = self._qualifiers['locus_tag']
+
+			if 'product' in self._qualifiers:
+				self.product = self._qualifiers['product'][0]
+
+			if 'protein_id' in self._qualifiers:
+				self.protein_id = self._qualifiers['protein_id'][0]
+
+			if 'gene' in self._qualifiers:
+				self.gene = self._qualifiers['gene'][0]
+			self.location = feature.location
 
 	@property
 	def get_id(self):
@@ -83,10 +91,19 @@ class CDSFeature(Feature):
 	@property
 	def get_cluster(self):
 		"""Returns a ClusterFeature"""
-		#TO-DO: Should return the corresponding ClusterFeature
-		return
+		return self.cluster
 
-
+	@property
+	def to_biopython(self):
+		"""Returns a Bio.SeqFeature.SeqFeature object with all its members"""
+		self._qualifiers['sec_met'] = self.sec_met
+		self._qualifiers['locus_tag'] = self.locus_tag
+		self._qualifiers['product'] = self.product
+		self._qualifiers['protein_id'] = self.protein_id
+		self._qualifiers['gene'] = self.gene
+		new_CDS = SeqFeature(FeatureLocation(self.location.start, self.location.end), type=self.type)
+		new_CDS.qualifiers = self._qualifiers
+		return [new_CDS]
 
 class ClusterFeature(Feature):
 	"""A ClusterFeature which subclasses Feature"""
@@ -94,44 +111,70 @@ class ClusterFeature(Feature):
 		"""Initialise a ClusterFeature
 			param feature: class 'Bio.SeqFeature.SeqFeature'
 		"""
-		if feature != None:
-			Feature.__init__(self, feature)
-		if 'cutoff' in self._qualifiers:
-			self.cutoff = self._qualifiers['cutoff']
-		else:
-			self.cutoff = None
-		if 'extension' in self._qualifiers:
-			self.extension = self._qualifiers['extension']
-		else:
-			self.extension = None
-		if 'contig_edge' in self._qualifiers:
-			self.contig_edge = self._qualifiers['contig_edge']
-		else:
-			self.contig_edge = None
-		if 'detection' in self._qualifiers:
-			self.detection = self._qualifiers['note'][1]
-		else:
-			self.detection = None
+		super(ClusterFeature, self).__init__()
+		self.cutoff = None
+		self.extension = None
+		self.contig_edge = None
+		self.detection = None
+		self.products = []
+		self._qualifiers = {}
+		self.type = 'cluster'
+
+		if feature is not None:
+			self._qualifiers = feature.qualifiers
+			if 'cutoff' in self._qualifiers:
+				self.cutoff = self._qualifiers['cutoff']
+
+			if 'extension' in self._qualifiers:
+				self.extension = self._qualifiers['extension']
+
+			if 'contig_edge' in self._qualifiers:
+				self.contig_edge = self._qualifiers['contig_edge']
+
+			if 'note' in self._qualifiers:
+				self.detection = self._qualifiers['note'][1]
+				self.clusternumber = int(self._qualifiers['note'][0].split(':')[1])
+
+			if 'product' in self._qualifiers:
+				self.products = self._qualifiers['product']
+			self.location = feature.location
+
+		self.cdss = []  #At present they are manually assigned for checking
+
+
+	@property
+	def add_product(self, product_value):
+		"""Adds a product qualifier to the ClusterFeature object"""
+		if isinstance(product_value, str):
+			self.products.append(product_value)
 
 	@property
 	def get_products(self):
 		"""Returns product qualifier from ClusterFeature object"""
-		return self._qualifiers['product']
+		return self.products
 
 	@property
 	def get_cluster_number(self):
 		"""Returns the clusternumber of the cluster"""
-		return int(self._qualifiers['note'][0].split()[2])
+		return self.clusternumber
 
 	@property
 	def get_CDSs(self):
-		#TO-DO: Should return a list of CDSFeatures
-		return
+		"""Retruns a list of CDS objects which belong to this cluster"""
+		return self.cdss
 
-	def add_product(self, product):
-		"""Adds a product qualifier to the ClusterFeature object"""
-		self._qualifiers['product'].append(product)
-
+	@property
+	def to_biopython(self):
+		"""Returns a Bio.SeqFeature.SeqFeature object with all its members"""
+		self._qualifiers['note'] = ["Cluster number: " + str(self.get_cluster_number)]
+		self._qualifiers['note'].append(self.detection)
+		self._qualifiers['cutoff'] = [self.cutoff]
+		self._qualifiers['extension'] = [self.extension]
+		self._qualifiers['product'] = self.products
+		self._qualifiers['contig_edge'] = self.contig_edge
+		new_cluster = SeqFeature(FeatureLocation(self.location.start, self.location.end), type=self.type)
+		new_cluster.qualifiers = self._qualifiers
+		return [new_cluster]
 
 class Record(object):
 	"""A record containing secondary metabolite clusters"""
@@ -143,8 +186,10 @@ class Record(object):
 		:type seq_record:   :class:`Bio.SeqRecord.SeqRecord`
 		"""
 		self._record = seq_record
-		self._modified_features = [] #A list containing instances of Feature or its subclasses
-
+		self._modified_CDS = []      #A list containing instances of CDSFeature
+		self._modified_Clusters = [] #A list containing instances of ClusterFeature
+		self._modified_Generic = []  #A list containing instances of GenericFeature
+		self.from_biopython(self._record)
 
 	@classmethod
 	def from_file(cls, filename, filetype):
@@ -204,43 +249,45 @@ class Record(object):
 	@property
 	def get_clusters(self):
 		"""A list of secondary metabolite clusters present in the record"""
-		if self._record is None:
-		    return []
-
-		clusters = [i for i in self._modified_features if i.type == 'cluster']
-		return clusters
+		return self._modified_Clusters
 
 	@property
 	def get_CDSs(self):
 		"""A list of secondary metabolite clusters present in the record"""
-		if self._record is None:
-		    return []
-
-		cdss = [i for i in self._modified_features if i.type == 'CDS']
-		return cdss
+		return self._modified_CDS
 
 	@property
 	def to_biopython(self):
-		"""Returns a Bio.SeqRecord instance"""
-		return self._record
+		"""Returns a Bio.SeqRecord instance of the record"""
+		new_record = self._record
+		features = self._modified_Generic
+		features.extend(self._modified_CDS)
+		features.extend(self._modified_Clusters)
+		record_features = []
+		for feature in features:
+			record_features.append(feature.to_biopython[0])
+		new_record.features = record_features  #A new_record with all the modified features
+		return new_record
 
+	@property
 	def get_cluster_number(self, clusterfeature):
 		"""Returns cluster number of a cluster feature
 			param ClusterFeature clusterfeature : A instance of ClusterFeature class
 		"""
-		return clusterfeature.get_cluster_number
+		if isinstance(clusterfeature, ClusterFeature):
+			return clusterfeature.clusternumber
 
-	def from_biopython(self):
+	def from_biopython(self, record):
 		"""Modifies _modified_features list with new Feature instances"""
-		features = self._record.features
+		features = record.features
 		for feature in features:
 			if feature.type == 'CDS':
 				feature = CDSFeature(feature)
-				self._modified_features.append(feature)
+				self._modified_CDS.append(feature)
 			elif feature.type == 'cluster':
 				feature = ClusterFeature(feature)
-				self._modified_features.append(feature)
+				self._modified_Clusters.append(feature)
 			else:
 				feature = GenericFeature(feature)
-				self._modified_features.append(feature)
+				self._modified_Generic.append(feature)
 		return self
