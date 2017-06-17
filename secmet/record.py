@@ -192,7 +192,7 @@ class ClusterFeature(Feature):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
         if not isinstance(self.location, FeatureLocation):
             raise ValueError("location should be an instance of 'Bio.SeqFeature.FeatureLocation'")
-        self._qualifiers['note'] = ["Cluster number: " + str(self.get_cluster_number)]
+        self._qualifiers['note'] = ["Cluster number: " + str(self.get_cluster_number())]
         self._qualifiers['note'].append(self.detection)
         self._qualifiers['cutoff'] = [str(self.cutoff)]
         self._qualifiers['extension'] = [str(self.extension)]
@@ -316,6 +316,8 @@ class Record(object):
                 else:
                     clusters[index] = feature
                     feature.parent_record = self
+                    for index, cluster in enumerate(clusters):
+                        self._cluster_number_dict[cluster] = index+1
                     return
             clusters.insert(index, feature)
             feature.parent_record = self

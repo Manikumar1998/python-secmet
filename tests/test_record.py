@@ -74,7 +74,7 @@ def test_add_feature():
     rec = Record.from_file(testfile, 'genbank')
     no_of_clusters = len(rec.get_clusters())
     no_of_cdss = len(rec.get_CDSs())
-    no_of_generics = len(rec._modified_Generic)
+    no_of_generics = len(rec._modified_generic)
     new_cluster = ClusterFeature()
 
     #ClusterFeature should have valid location for adding
@@ -86,6 +86,6 @@ def test_add_feature():
     rec.add_feature(new_generic)
     assert no_of_clusters+1 == len(rec.get_clusters())
     assert no_of_cdss+1 == len(rec.get_CDSs())
-    assert no_of_generics+1 == len(rec._modified_Generic)
+    assert no_of_generics+1 == len(rec._modified_generic)
     assert rec.get_clusters()[0].get_cluster_number() == 1
     assert new_cluster.get_cluster_number() == 2
