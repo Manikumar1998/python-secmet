@@ -46,7 +46,7 @@ class GenericFeature(Feature):
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature of given type of feature"""
         if not isinstance(self.location, FeatureLocation):
-            raise ValueError("location should be an instance of 'Bio.SeqFeature.FeatureLocation'")
+            raise ValueError("location should be an instance of Bio.SeqFeature.FeatureLocation")
         new_Generic = SeqFeature(FeatureLocation(self.location.start, self.location.end), type=self.type)
         new_Generic.qualifiers = self._qualifiers.copy()
         return [new_Generic]
@@ -100,7 +100,7 @@ class CDSFeature(Feature):
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
         if not isinstance(self.location, FeatureLocation):
-            raise ValueError("location should be an instance of 'Bio.SeqFeature.FeatureLocation'")
+            raise ValueError("location should be an instance of Bio.SeqFeature.FeatureLocation")
         self._qualifiers['sec_met'] = self.sec_met
         self._qualifiers['locus_tag'] = [str(self.locus_tag)]
         self._qualifiers['product'] = [str(self.product)]
@@ -191,7 +191,7 @@ class ClusterFeature(Feature):
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
         if not isinstance(self.location, FeatureLocation):
-            raise ValueError("location should be an instance of 'Bio.SeqFeature.FeatureLocation'")
+            raise ValueError("location should be an instance of Bio.SeqFeature.FeatureLocation")
         self._qualifiers['note'] = ["Cluster number: " + str(self.get_cluster_number())]
         self._qualifiers['note'].append(self.detection)
         self._qualifiers['cutoff'] = [str(self.cutoff)]
@@ -213,9 +213,10 @@ class Record(object):
         :type seq_record:   :class:`Bio.SeqRecord.SeqRecord`
         """
         self._record = seq_record
-        self._modified_cds = []      #A list containing instances of CDSFeature
-        self._modified_cluster = [] #A list containing instances of ClusterFeature
-        self._modified_generic = []  #A list containing instances of GenericFeature
+        self._features = []            #A list containing all Feature instances
+        self._modified_cds = []        #A list containing instances of CDSFeature
+        self._modified_cluster = []    #A list containing instances of ClusterFeature
+        self._modified_generic = []    #A list containing instances of GenericFeature
         self._cluster_number_dict = {} #A dictionary to map clusters and their numbers
 
         if not isinstance(self._record, SeqRecord.SeqRecord):
@@ -285,9 +286,12 @@ class Record(object):
     def to_biopython(self):
         """Returns a Bio.SeqRecord instance of the record"""
         new_record = self._record
-        features = self._modified_generic
-        features.extend(self._modified_cds)
-        features.extend(self._modified_cluster)
+        features = self._features
+        for index, feature in enumerate(features):
+            if feature.type == 'cluster':
+                features.pop(index)
+        for index, cluster in enumerate(self.get_clusters()):
+            features.insert(index+1, cluster)
         record_features = []
         for feature in features:
             record_features.append(feature.to_biopython()[0])
@@ -306,8 +310,8 @@ class Record(object):
             raise TypeError("The argument is not an instance of 'Feature'")
         if feature.type == 'cluster':
             if not isinstance(feature.location, FeatureLocation):
-                raise ValueError("location should be an instance of 'Bio.SeqFeatures.FeatureLocation'")
-            clusters = self._modified_cluster
+                raise ValueError("location should be an instance of Bio.SeqFeature.FeatureLocation")
+            clusters = self.get_clusters()
             clusters.append(None)
             for index, cluster in enumerate(clusters):
                 if cluster is not None:
@@ -323,11 +327,13 @@ class Record(object):
             feature.parent_record = self
             for index, cluster in enumerate(clusters):
                 self._cluster_number_dict[cluster] = index+1
+            return
 
         elif feature.type == 'CDS':
             self._modified_cds.append(feature)
         else:
             self._modified_generic.append(feature)
+        self._features.append(feature)
 
     def from_biopython(self, record):
         """Modifies _modified_features list with new Feature instances"""
@@ -344,4 +350,5 @@ class Record(object):
             else:
                 feature = GenericFeature(feature)
                 self._modified_generic.append(feature)
+            self._features.append(feature)
         return self
