@@ -224,14 +224,15 @@ class Record(object):
         self.from_biopython(self._record)
 
     @classmethod
-    def from_file(cls, filename, filetype):
+    def from_file(cls, filename):
 
         """Initialise a record from a file of specified type
 
         :param string filename:    file name of the file to read
         :param string filetype:    Type of the inputfile
         """
-        if filetype in ['gb', 'genbank']:
+        filetype = filename.split('.')[-1]
+        if filetype in ['gb', 'gbk', 'genbank']:
             type_of_file = 'genbank'
         elif filetype in ['fa', 'fas', 'fasta']:
             type_of_file = 'fasta'
@@ -290,8 +291,10 @@ class Record(object):
         for index, feature in enumerate(features):
             if feature.type == 'cluster':
                 features.pop(index)
-        for index, cluster in enumerate(self.get_clusters()):
-            features.insert(index+1, cluster)
+            if feature.type == 'source':
+                source_index = index
+        for cluster in self.get_clusters():
+            features.insert(source_index+1, cluster)
         record_features = []
         for feature in features:
             record_features.append(feature.to_biopython()[0])
