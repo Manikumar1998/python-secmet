@@ -11,7 +11,7 @@ filetype = 'embl'
 
 def get_testfile():
     """File path for testing"""
-    return path.join(path.dirname(__file__), 'tests/data', filename)
+    return path.join(path.dirname(__file__), 'data', filename)
 
 def test_from_file():
     """Test file operations in Record"""

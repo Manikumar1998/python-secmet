@@ -9,7 +9,7 @@ filetype = 'genbank'
 
 def get_testfile():
     """File path for testing"""
-    return path.join(path.dirname(__file__), 'tests/data', filename)
+    return path.join(path.dirname(__file__), 'data', filename)
 
 def test_add_new_cluster():
     """Test for adding a new cluster to record"""
