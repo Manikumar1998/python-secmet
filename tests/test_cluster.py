@@ -53,14 +53,14 @@ def test_add_existing_cluster():
         rec.add_feature(new_cluster)
         return new_cluster
 
-def write_to_genbank_file():
+def write_to_file():
     """Write data from test_add_new_cluster()"""
     testfile = get_testfile()
     rec = Record.from_file(testfile)
     new_cluster_feature = test_add_new_cluster()
     rec.add_feature(new_cluster_feature)
     record_1 = rec.to_biopython()
-    with open('test_'+filename, 'w') as handle:
+    with open('test_new_'+filename, 'w') as handle:
         SeqIO.write([record_1], handle, filetype)
 
     #Write data from test_add_existing_cluster()
@@ -71,5 +71,5 @@ def write_to_genbank_file():
     except TypeError:   #To return if no clusters are already present in the file
         return
     record_2 = rec.to_biopython()
-    with open('test_'+filename, 'w') as handle:
+    with open('test_existing_'+filename, 'w') as handle:
         SeqIO.write([record_2], handle, filetype)
