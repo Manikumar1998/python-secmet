@@ -6,7 +6,6 @@ from Bio import SeqIO, SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 import sys
 
-logging = []
 def cmp_feature_location(a, b):
     "Compare two features by their start/end locations"
     ret = cmp(a.location.start, b.location.start)
@@ -18,14 +17,7 @@ def sort_features(seq_record):
     "Sort features in a seq_record by their position"
     #Check if all features have a proper location assigned
     for feature in seq_record.features:
-        if feature.location is None:
-            if feature.id != "<unknown id>":
-                logging.append("Feature '%s' has no proper location assigned", feature.id)
-            elif "locus_tag" in feature.qualifiers:
-                logging.append("Feature '%s' has no proper location assigned", feature.qualifiers["locus_tag"][0])
-            else:
-                logging.append("File contains feature without proper location assignment")
-            sys.exit(0) #FIXME: is sys.exit(0) really what we want to do here?
+        assert feature.location is not None
     #Sort features by location
     seq_record.features.sort(cmp=cmp_feature_location)
 
@@ -71,7 +63,7 @@ class GenericFeature(Feature):
         """Returns a Bio.SeqFeature.SeqFeature of given type of feature"""
         if not isinstance(self.location, FeatureLocation):
             raise ValueError("location should be an instance of Bio.SeqFeature.FeatureLocation")
-        new_Generic = SeqFeature(self.location, type=self.type)
+        new_Generic = SeqFeature(FeatureLocation(self.location.start, self.location.end, self.location.strand), type=self.type)
         new_Generic.qualifiers = self._qualifiers.copy()
         return [new_Generic]
 
@@ -130,7 +122,7 @@ class CDSFeature(Feature):
         self._qualifiers['product'] = [str(self.product)]
         self._qualifiers['protein_id'] = [str(self.protein_id)]
         self._qualifiers['gene'] = [str(self.gene)]
-        new_CDS = SeqFeature(self.location, type=self.type)
+        new_CDS = SeqFeature(FeatureLocation(self.location.start, self.location.end, self.location.strand), type=self.type)
         new_CDS.qualifiers = self._qualifiers.copy()
         return [new_CDS]
 
@@ -228,7 +220,7 @@ class ClusterFeature(Feature):
         self._qualifiers['extension'] = [str(self.extension)]
         self._qualifiers['product'] = self.products
         self._qualifiers['contig_edge'] = [str(self.contig_edge)]
-        new_Cluster = SeqFeature(self.location, type=self.type)
+        new_Cluster = SeqFeature(FeatureLocation(self.location.start, self.location.end, self.location.strand), type=self.type)
         new_Cluster.qualifiers = self._qualifiers.copy()
         return [new_Cluster]
 
@@ -378,3 +370,7 @@ class Record(object):
                 feature = GenericFeature(feature)
                 self._modified_generic.append(feature)
         return self
+"""
+rec = Record.from_file("../tests/data/nisin.gbk")
+print rec.get_clusters()[0].to_biopython()[0].location.parts
+"""
