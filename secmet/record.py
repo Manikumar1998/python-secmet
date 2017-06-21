@@ -370,7 +370,3 @@ class Record(object):
                 feature = GenericFeature(feature)
                 self._modified_generic.append(feature)
         return self
-"""
-rec = Record.from_file("../tests/data/nisin.gbk")
-print rec.get_clusters()[0].to_biopython()[0].location.parts
-"""
