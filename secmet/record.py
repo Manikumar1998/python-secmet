@@ -71,8 +71,7 @@ class GenericFeature(Feature):
         """Returns a Bio.SeqFeature.SeqFeature of given type of feature"""
         if not isinstance(self.location, FeatureLocation):
             raise ValueError("location should be an instance of Bio.SeqFeature.FeatureLocation")
-        new_Generic = SeqFeature(FeatureLocation(self.location.start, self.location.end), type=self.type)
-        new_Generic.location = self.location
+        new_Generic = SeqFeature(self.location, type=self.type)
         new_Generic.qualifiers = self._qualifiers.copy()
         return [new_Generic]
 
@@ -131,8 +130,7 @@ class CDSFeature(Feature):
         self._qualifiers['product'] = [str(self.product)]
         self._qualifiers['protein_id'] = [str(self.protein_id)]
         self._qualifiers['gene'] = [str(self.gene)]
-        new_CDS = SeqFeature(FeatureLocation(self.location.start, self.location.end), type=self.type)
-        new_CDS.location = self.location
+        new_CDS = SeqFeature(self.location, type=self.type)
         new_CDS.qualifiers = self._qualifiers.copy()
         return [new_CDS]
 
@@ -230,8 +228,7 @@ class ClusterFeature(Feature):
         self._qualifiers['extension'] = [str(self.extension)]
         self._qualifiers['product'] = self.products
         self._qualifiers['contig_edge'] = [str(self.contig_edge)]
-        new_Cluster = SeqFeature(FeatureLocation(self.location.start, self.location.end), type=self.type)
-        new_Cluster.location = self.location
+        new_Cluster = SeqFeature(self.location, type=self.type)
         new_Cluster.qualifiers = self._qualifiers.copy()
         return [new_Cluster]
 
