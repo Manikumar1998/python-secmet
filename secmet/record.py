@@ -240,6 +240,7 @@ class Record(object):
         self._modified_generic = []    #A list containing instances of GenericFeature
         self._cluster_number_dict = {} #A dictionary to map clusters and their numbers
 
+
         if not isinstance(self._record, SeqRecord.SeqRecord):
             raise ValueError("SeqRecord should be an instance of 'Bio.SeqRecord.SeqRecord'")
         self.from_biopython(self._record)
@@ -296,6 +297,19 @@ class Record(object):
             return self._record.description
         else:
             return ""
+
+    @property
+    def name(self):
+        """Pass through to seq_record object if available"""
+        if self._record is not None:
+            return self._record.name
+        else:
+            return "NO_NAME_ASSIGNED"
+
+    @property
+    def record(self):
+        """Return the seq_record object"""
+        return self._record
 
     def get_clusters(self):
         """A list of secondary metabolite clusters present in the record"""
