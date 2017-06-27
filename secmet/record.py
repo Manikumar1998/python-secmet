@@ -2,7 +2,7 @@
 # Licensed under the APL2, see LICENSE for details
 """Secondary Metabolite Record Objects"""
 
-from Bio import SeqIO, SeqRecord
+from Bio import SeqIO, SeqRecord, Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 import sys
 
@@ -81,6 +81,7 @@ class CDSFeature(Feature):
         self.product = None
         self.protein_id = None
         self.gene = None
+        self.translation = None
         self.cluster = None  #At present we are manually assigning it for checking
         self._qualifiers = {}
         self.type = 'CDS'
@@ -103,6 +104,9 @@ class CDSFeature(Feature):
 
             if 'gene' in self._qualifiers:
                 self.gene = self._qualifiers['gene'][0]
+
+            if 'translation' in self._qualifiers:
+                self.translation = self._qualifiers['translation'][0]
             self.location = feature.location
 
     def get_id(self):
@@ -122,6 +126,7 @@ class CDSFeature(Feature):
         self._qualifiers['product'] = [str(self.product)]
         self._qualifiers['protein_id'] = [str(self.protein_id)]
         self._qualifiers['gene'] = [str(self.gene)]
+        self._qualifiers['translation'] = [str(self.translation)]
         new_CDS = SeqFeature(FeatureLocation(self.location.start, self.location.end, self.location.strand), type=self.type)
         new_CDS.qualifiers = self._qualifiers.copy()
         return [new_CDS]
@@ -281,6 +286,12 @@ class Record(object):
             return self._record.seq
         else:
             return None
+    @seq.setter
+    def seq(self, value):
+        """Setter for seq in Record"""
+        if not isinstance(value, Seq.Seq):
+            raise ValueError('Sequence should of type "Bio.Seq.Seq"')
+        self._record.seq = value
 
     @property
     def annotations(self):
@@ -305,11 +316,6 @@ class Record(object):
             return self._record.name
         else:
             return "NO_NAME_ASSIGNED"
-
-    @property
-    def record(self):
-        """Return the seq_record object"""
-        return self._record
 
     def get_clusters(self):
         """A list of secondary metabolite clusters present in the record"""
@@ -384,3 +390,4 @@ class Record(object):
                 feature = GenericFeature(feature)
                 self._modified_generic.append(feature)
         return self
+
