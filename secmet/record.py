@@ -278,6 +278,12 @@ class Record(object):
             return self._record.id
         else:
             return "NO_ID_ASSIGNED"
+    @id.setter
+    def id(self, value):
+        """Setter for id in Record"""
+        if not isinstance(value, str):
+            raise ValueError('ID should be of type "str"')
+        self._record.id = value
 
     @property
     def seq(self):
@@ -290,7 +296,7 @@ class Record(object):
     def seq(self, value):
         """Setter for seq in Record"""
         if not isinstance(value, Seq.Seq):
-            raise ValueError('Sequence should of type "Bio.Seq.Seq"')
+            raise ValueError('Sequence should be of type "Bio.Seq.Seq"')
         self._record.seq = value
 
     @property
