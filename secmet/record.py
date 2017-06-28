@@ -160,8 +160,9 @@ class ClusterFeature(Feature):
 
             if 'note' in self._qualifiers:
                 note_list = self._qualifiers['note']
-                self.detection = note_list[1]
                 self.clusternumber = int(note_list[0].split(':')[1])
+                if len(note_list) > 1:
+                    self.detection = note_list[1]
                 if len(note_list) > 2:
                     for i in range(2, len(note_list)):
                         self.note.append(note_list[i])
@@ -326,15 +327,25 @@ class Record(object):
     def get_clusters(self):
         """A list of secondary metabolite clusters present in the record"""
         return self._modified_cluster
+    def set_clusters(self, clusters_list):
+        """To set the clusters of the seq_record"""
+        self._modified_cluster = clusters_list
 
     def get_CDSs(self):
         """A list of secondary metabolite clusters present in the record"""
         return self._modified_cds
 
+    def get_generics(self):
+        """A list of secondary metabolite generics present in the record"""
+        return self._modified_generic
+    def set_generics(self, generics_list):
+        """To set the generic features of the seq_record"""
+        self._modified_generic = generics_list
+
     def to_biopython(self):
         """Returns a Bio.SeqRecord instance of the record"""
         new_record = self._record
-        features = self._modified_generic
+        features = self.get_generics()[:] #Clone the private list
         features.extend(self.get_clusters())
         features.extend(self.get_CDSs())
         record_features = []
@@ -396,4 +407,3 @@ class Record(object):
                 feature = GenericFeature(feature)
                 self._modified_generic.append(feature)
         return self
-
