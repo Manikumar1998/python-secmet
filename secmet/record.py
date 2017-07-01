@@ -2,9 +2,10 @@
 # Licensed under the APL2, see LICENSE for details
 """Secondary Metabolite Record Objects"""
 
-from Bio import SeqIO, SeqRecord, Seq
-from Bio.SeqFeature import SeqFeature, FeatureLocation
-import sys
+from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 
 def cmp_feature_location(a, b):
     "Compare two features by their start/end locations"
@@ -246,10 +247,12 @@ class Record(object):
         self._modified_generic = []    #A list containing instances of GenericFeature
         self._cluster_number_dict = {} #A dictionary to map clusters and their numbers
 
-
-        if not isinstance(self._record, SeqRecord.SeqRecord):
-            raise ValueError("SeqRecord should be an instance of 'Bio.SeqRecord.SeqRecord'")
-        self.from_biopython(self._record)
+        if self._record is not None:
+            if not isinstance(self._record, SeqRecord):
+                raise ValueError("SeqRecord should be an instance of 'Bio.SeqRecord.SeqRecord'")
+            self.from_biopython(self._record)
+        else:
+            self._record = SeqRecord(Seq(""))
 
     @classmethod
     def from_file(cls, filename):
@@ -296,17 +299,9 @@ class Record(object):
     @seq.setter
     def seq(self, value):
         """Setter for seq in Record"""
-        if not isinstance(value, Seq.Seq):
+        if not isinstance(value, Seq):
             raise ValueError('Sequence should be of type "Bio.Seq.Seq"')
         self._record.seq = value
-
-    @property
-    def annotations(self):
-        """Pass through to seq_record object if available"""
-        if self._record is not None:
-            return self._record.annotations
-        else:
-            return {}
 
     @property
     def description(self):
@@ -315,6 +310,12 @@ class Record(object):
             return self._record.description
         else:
             return ""
+    @description.setter
+    def description(self, value):
+        """Setter for description in Record"""
+        if not isinstance(value, str):
+            raise ValueError('Description should be of type "string"')
+        self._record.description = value
 
     @property
     def name(self):
@@ -323,6 +324,26 @@ class Record(object):
             return self._record.name
         else:
             return "NO_NAME_ASSIGNED"
+    @name.setter
+    def name(self, value):
+        """Setter for name in Record"""
+        if not isinstance(value, str):
+            raise ValueError('Name should be of type "string"')
+        self._record.name = value
+
+    @property
+    def annotations(self):
+        """Pass through to seq_record object if available"""
+        if self._record is not None:
+            return self._record.annotations
+        else:
+            return {}
+    def add_annotation(self, key, value):
+        """Adding annotations in Record"""
+        if not (isinstance(key, str) and (isinstance(value, str) or isinstance(value, list))):
+            raise ValueError('Key and Value are not in right format')
+        self._record.annotations[key] = value
+
 
     def get_clusters(self):
         """A list of secondary metabolite clusters present in the record"""
