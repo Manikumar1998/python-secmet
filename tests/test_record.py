@@ -2,8 +2,7 @@ from os import path
 import Bio
 from Bio import SeqIO
 from Bio.SeqFeature import FeatureLocation
-from secmet.record import Record
-from secmet.record import GenericFeature, ClusterFeature, CDSFeature
+from secmet.record import Record, GenericFeature, ClusterFeature, CDSFeature
 
 #Global variables for test file name and its type
 filename = 'nisin.gbk'
