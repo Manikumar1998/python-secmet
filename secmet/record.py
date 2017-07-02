@@ -190,12 +190,15 @@ class ClusterFeature(Feature):
 
             if 'note' in self._qualifiers:
                 note_list = self._qualifiers['note']
-                self.clusternumber = int(note_list[0].split(':')[1])
-                if len(note_list) > 1:
-                    self.detection = note_list[1]
-                if len(note_list) > 2:
-                    for i in range(2, len(note_list)):
-                        self.note.append(note_list[i])
+                note_list_copy = note_list[:]
+                for  value in note_list:
+                    if value.startswith('Cluster number'):
+                        self.clusternumber = int(value.split(':')[1])
+                        note_list_copy.remove(value)
+                    if value.startswith('Detection rule(s)'):
+                        self.detection = value
+                        note_list_copy.remove(value)
+                self.note.extend(note_list_copy)
 
             if 'product' in self._qualifiers:
                 self.products = self._qualifiers['product']
