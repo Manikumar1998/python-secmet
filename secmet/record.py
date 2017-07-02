@@ -105,6 +105,7 @@ class CDSFeature(Feature):
             param feature: class 'Bio.SeqFeature.SeqFeature'
         """
         super(CDSFeature, self).__init__()
+        self.id = '<unknown id>'
         self.sec_met = []
         self.locus_tag = None
         self.product = None
@@ -112,6 +113,7 @@ class CDSFeature(Feature):
         self.gene = None
         self.translation = None
         self.cluster = None  #At present we are manually assigning it for checking
+        self.note = []
         self._qualifiers = {}
         self.type = 'CDS'
 
@@ -136,7 +138,12 @@ class CDSFeature(Feature):
 
             if 'translation' in self._qualifiers:
                 self.translation = self._qualifiers['translation'][0]
+
+            if 'note' in self._qualifiers:
+                self.note = self._qualifiers['note']
+
             self.set_location([feature.location.start, feature.location.end, feature.location.strand])
+
 
     def get_id(self):
         """Returns the id of the CDSFeature"""
@@ -157,7 +164,8 @@ class CDSFeature(Feature):
         self._qualifiers['protein_id'] = [str(self.protein_id)]
         self._qualifiers['gene'] = [str(self.gene)]
         self._qualifiers['translation'] = [str(self.translation)]
-        new_CDS = SeqFeature(location, type=self.type)
+        self._qualifiers['note'] = self.note
+        new_CDS = SeqFeature(location, type=self.type, id=self.id)
         new_CDS.qualifiers = self._qualifiers.copy()
         return [new_CDS]
 
