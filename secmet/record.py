@@ -29,32 +29,26 @@ class Feature(object):
         self.location = None
         self.type = None
 
-    def set_location(self, locations):
+    def set_location(self, start=None, end=None, strand=None, compound=None):
         """Set feature's location"""
-        if not isinstance(locations, list):
-            raise ValueError('locations should be a in list format')
-        if isinstance(locations[0], int):
-            if len(locations) < 2:
-                raise ValueError('Location should have atleast start and end positions')
-            if len(locations) == 2:
-                locations.append(None)
-            start, end, strand = locations
-            self.location = FeatureLocation(start, end, strand)
-        elif isinstance(locations[0], list):
-            compound_list = []
-            for location in locations:
-                if len(location) < 2:
-                    raise ValueError('Location should have atleast start and end positions')
-                if len(location) == 2:
-                    location.append(None)
-                start, end, strand = location
-                compound_list.append(FeatureLocation(start, end, strand))
-            self.location = CompoundLocation(compound_list)
+        if compound is not None:
+            if not isinstance(compound, CompoundLocation):
+                raise ValueError('Expected an instance of "Bio.SeqFeature.CompoundLocation"')
+            self.location = compound
+        else:
+            if start is not None and end is not None:
+                if not (isinstance(start, int) and isinstance(end, int)):
+                    raise ValueError('Start and End should be of type "int"')
+                loc = FeatureLocation(start, end)
+                if strand is not None:
+                    loc.strand = strand
+                self.location = loc
+            else:
+                raise ValueError('Start and End cannot be None')
 
     def get_location(self):
         """Return feature's location"""
         return self.location
-
 
 class GenericFeature(Feature):
     """A GenericFeature Feature subclasses Feature
@@ -69,7 +63,7 @@ class GenericFeature(Feature):
         if feature is not None:
             self._qualifiers = feature.qualifiers
             self.type = feature.type
-            self.set_location([feature.location.start, feature.location.end, feature.location.strand])
+            self.set_location(feature.location.start, feature.location.end, feature.location.strand)
 
 
     def add_qualifier(self, category, info):
@@ -142,7 +136,7 @@ class CDSFeature(Feature):
             if 'note' in self._qualifiers:
                 self.note = self._qualifiers['note']
 
-            self.set_location([feature.location.start, feature.location.end, feature.location.strand])
+            self.set_location(feature.location.start, feature.location.end, feature.location.strand)
 
 
     def get_id(self):
@@ -210,7 +204,7 @@ class ClusterFeature(Feature):
 
             if 'product' in self._qualifiers:
                 self.products = self._qualifiers['product']
-            self.set_location([feature.location.start, feature.location.end, feature.location.strand])
+            self.set_location(feature.location.start, feature.location.end, feature.location.strand)
 
         self.cdss = []  #At present they are manually assigned for checking
 
@@ -385,6 +379,9 @@ class Record(object):
             raise ValueError('Key and Value are not in right format')
         self._record.annotations[key] = value
 
+    def __len__(self):
+        """Return the length of the Biorecord"""
+        return len(self._record)
 
     def get_clusters(self):
         """A list of secondary metabolite clusters present in the record"""
