@@ -32,9 +32,22 @@ class Feature(object):
     def set_location(self, start=None, end=None, strand=None, compound=None):
         """Set feature's location"""
         if compound is not None:
-            if not isinstance(compound, CompoundLocation):
-                raise ValueError('Expected an instance of "Bio.SeqFeature.CompoundLocation"')
-            self.location = compound
+            if isinstance(compound, CompoundLocation):
+                self.location = compound
+            elif isinstance(compound, list):
+                if not isinstance(compound[0], list):
+                    raise ValueError('Expected a 2D list')
+                compound_list = []
+                for location in compound:
+                    if len(location) < 2:
+                        raise ValueError('Location should have atleast Start and End positions')
+                    if len(location) == 2:
+                        location.append(None)
+                    start, end, strand = location
+                    compound_list.append(FeatureLocation(start, end, strand))
+                self.location = CompoundLocation(compound_list)
+            else:
+                raise ValueError('Expected an instance of "CompoundLocation" or a list')
         else:
             if start is not None and end is not None:
                 if not (isinstance(start, int) and isinstance(end, int)):
