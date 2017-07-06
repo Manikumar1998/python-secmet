@@ -93,6 +93,8 @@ class GenericFeature(Feature):
         """Returns a qualifier of given category"""
         if category in self._qualifiers:
             return self._qualifiers[category]
+        else:
+            return []
 
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature of given type of feature"""
@@ -121,6 +123,7 @@ class CDSFeature(Feature):
         self.translation = None
         self.cluster = None  #At present we are manually assigning it for checking
         self.note = []
+        self.EC_number = None
         self._qualifiers = {}
         self.type = 'CDS'
 
@@ -149,6 +152,9 @@ class CDSFeature(Feature):
             if 'note' in self._qualifiers:
                 self.note = self._qualifiers['note']
 
+            if 'EC_number' in self._qualifiers:
+                self.EC_number = self._qualifiers['EC_number'][0]
+
             self.set_location(feature.location.start, feature.location.end, feature.location.strand)
 
 
@@ -172,6 +178,7 @@ class CDSFeature(Feature):
         self._qualifiers['gene'] = [str(self.gene)]
         self._qualifiers['translation'] = [str(self.translation)]
         self._qualifiers['note'] = self.note
+        self._qualifiers['EC_number'] = [str(self.EC_number)]
         new_CDS = SeqFeature(location, type=self.type, id=self.id)
         new_CDS.qualifiers = self._qualifiers.copy()
         return [new_CDS]
@@ -191,6 +198,8 @@ class ClusterFeature(Feature):
         self.parent_record = None
         self.type = 'cluster'
         self.note = []
+        self.structure = None
+        self.probability = None
 
         if feature is not None:
             self._qualifiers = feature.qualifiers
@@ -217,6 +226,12 @@ class ClusterFeature(Feature):
 
             if 'product' in self._qualifiers:
                 self.products = self._qualifiers['product']
+
+            if 'structure' in self._qualifiers:
+                self.structure = self._qualifiers['structure'][0]
+
+            if 'probability' in self._qualifiers:
+                self.probability = self._qualifiers['probability'][0]
             self.set_location(feature.location.start, feature.location.end, feature.location.strand)
 
         self.cdss = []  #At present they are manually assigned for checking
@@ -275,6 +290,8 @@ class ClusterFeature(Feature):
         self._qualifiers['extension'] = [str(self.extension)]
         self._qualifiers['product'] = self.products
         self._qualifiers['contig_edge'] = [str(self.contig_edge)]
+        self._qualifiers['structure'] = [str(self.structure)]
+        self._qualifiers['probability'] = [str(self.probability)]
         new_Cluster = SeqFeature(location, type=self.type)
         new_Cluster.qualifiers = self._qualifiers.copy()
         return [new_Cluster]
