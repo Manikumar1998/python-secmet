@@ -178,7 +178,8 @@ class CDSFeature(Feature):
         self._qualifiers['gene'] = [str(self.gene)]
         self._qualifiers['translation'] = [str(self.translation)]
         self._qualifiers['note'] = self.note
-        self._qualifiers['EC_number'] = [str(self.EC_number)]
+        if self.EC_number is not None:
+            self._qualifiers['EC_number'] = [str(self.EC_number)]
         new_CDS = SeqFeature(location, type=self.type, id=self.id)
         new_CDS.qualifiers = self._qualifiers.copy()
         return [new_CDS]
@@ -290,8 +291,10 @@ class ClusterFeature(Feature):
         self._qualifiers['extension'] = [str(self.extension)]
         self._qualifiers['product'] = self.products
         self._qualifiers['contig_edge'] = [str(self.contig_edge)]
-        self._qualifiers['structure'] = [str(self.structure)]
-        self._qualifiers['probability'] = [str(self.probability)]
+        if self.structure is not None:
+            self._qualifiers['structure'] = [str(self.structure)]
+        if self.probability is not None:
+            self._qualifiers['probability'] = [str(self.probability)]
         new_Cluster = SeqFeature(location, type=self.type)
         new_Cluster.qualifiers = self._qualifiers.copy()
         return [new_Cluster]
