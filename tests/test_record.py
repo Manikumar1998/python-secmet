@@ -100,10 +100,9 @@ def test_add_feature():
     no_of_cdss = len(rec.get_CDSs())
     no_of_generics = len(rec._modified_generic)
     new_cluster = ClusterFeature()
-
-    #ClusterFeature should have valid location for adding
     new_cluster.location = FeatureLocation(15100, 15200)
     new_cds = CDSFeature()
+    new_cds.location = FeatureLocation(200, 300)
     new_generic = GenericFeature()
     rec.add_feature(new_cluster)
     rec.add_feature(new_cds)

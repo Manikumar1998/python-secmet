@@ -22,18 +22,63 @@ def sort_features(seq_record):
     #Sort features by location
     seq_record.features.sort(cmp=cmp_feature_location)
 
+
+def find_cluster_pos(array, start, end, target):
+    """Search for appropriate position in array to add cluster"""
+    if not array:
+        return 0
+    #stopping condition
+    try:
+        if array[start].location.start <= target.location.start and array[start+1].location.start >= target.location.start:
+            return start+1
+    except IndexError:
+        return start+1
+
+    mid = start+(end-start)/2
+    if start == end or mid == start:
+        if target.location.start < array[0].location.start:
+            return 0
+        else:
+            return len(array)
+    if array[mid].location.start > target.location.start:
+        return find_cluster_pos(array, start, mid, target)
+    elif array[mid].location.start <= target.location.start:
+        return find_cluster_pos(array, mid, end, target)
+
+def find_cluster(array, start, end, target):
+    if not array:
+        return
+    #Stopping condition
+    if array[start].location.start <= target.location.start <= array[start].location.end or \
+       array[start].location.start <= target.location.end <= array[start].location.end:
+        array[start].cdss.append(target)
+        target.cluster = array[start]
+        return
+
+    mid = start+(end-start)/2
+    if start == end or mid == start:
+        return
+    if array[mid].location.start > target.location.start:
+        return find_cluster(array, start, mid, target)
+    elif array[mid].location.start <= target.location.start:
+        return find_cluster(array, mid, end, target)
+
 class Feature(object):
     """A Feature super class that expands to different subclasses"""
     def __init__(self):
         """ Initialise a feature object"""
-        self.location = None
         self.type = None
 
-    def set_location(self, location):
-        """Set feature's location"""
-        if not isinstance(location, (FeatureLocation, CompoundLocation)):
-            raise ValueError('Location should be an instance of FeatureLocation or CompoundLocation ')
-        self.location = location
+    def _get_location(self):
+        try:
+            return self.__location
+        except:
+            raise ValueError('Unassigned location')
+    def _set_location(self, value):
+        if not isinstance(value, (FeatureLocation, CompoundLocation)):
+            raise TypeError("Location must be of type FeatureLocation or CompoundLocation")
+        self.__location = value
+    location = property(_get_location, _set_location)
 
 class GenericFeature(Feature):
     """A GenericFeature Feature subclasses Feature
@@ -48,7 +93,7 @@ class GenericFeature(Feature):
         if feature is not None:
             self._qualifiers = feature.qualifiers
             self.type = feature.type
-            self.set_location(feature.location)
+            self.location = feature.location
 
 
     def add_qualifier(self, category, info):
@@ -70,8 +115,6 @@ class GenericFeature(Feature):
 
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature of given type of feature"""
-        if not isinstance(self.location, (FeatureLocation, CompoundLocation)):
-            raise ValueError("location should be an instance of FeatureLocation or CompoundLocation")
         new_Generic = SeqFeature(self.location, type=self.type)
         new_Generic.qualifiers = self._qualifiers.copy()
         return [new_Generic]
@@ -95,6 +138,7 @@ class CDSFeature(Feature):
         self.cluster = None
         self.note = []
         self.EC_number = None
+        self.transl_table = None
         self._qualifiers = {}
         self.type = 'CDS'
 
@@ -126,7 +170,10 @@ class CDSFeature(Feature):
             if 'EC_number' in self._qualifiers:
                 self.EC_number = self._qualifiers['EC_number'][0]
 
-            self.set_location(feature.location)
+            if 'transl_table' in self._qualifiers:
+                self.transl_table = self._qualifiers['transl_table'][0]
+
+            self.location = feature.location
 
 
     def get_id(self):
@@ -139,8 +186,7 @@ class CDSFeature(Feature):
 
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
-        if not isinstance(self.location, (FeatureLocation, CompoundLocation)):
-            raise ValueError("location should be an instance of FeatureLocation or CompoundLocation")
+        new_CDS = SeqFeature(self.location, type=self.type, id=self.id)
         self._qualifiers['sec_met'] = self.sec_met
         self._qualifiers['locus_tag'] = [str(self.locus_tag)]
         self._qualifiers['product'] = [str(self.product)]
@@ -150,7 +196,8 @@ class CDSFeature(Feature):
         self._qualifiers['note'] = self.note
         if self.EC_number is not None:
             self._qualifiers['EC_number'] = [str(self.EC_number)]
-        new_CDS = SeqFeature(self.location, type=self.type, id=self.id)
+        if self.transl_table is not None:
+            self._qualifiers['transl_table'] = [str(self.transl_table)]
         new_CDS.qualifiers = self._qualifiers.copy()
         return [new_CDS]
 
@@ -204,7 +251,7 @@ class ClusterFeature(Feature):
 
             if 'probability' in self._qualifiers:
                 self.probability = self._qualifiers['probability'][0]
-            self.set_location(feature.location)
+            self.location = feature.location
 
     def _get_cutoff(self):
         try:
@@ -250,8 +297,7 @@ class ClusterFeature(Feature):
 
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
-        if not isinstance(self.location, (FeatureLocation, CompoundLocation)):
-            raise ValueError("location should be an instance of FeatureLocation or CompoundLocation")
+        new_Cluster = SeqFeature(self.location, type=self.type)
         self._qualifiers['note'] = ["Cluster number: " + str(self.get_cluster_number())]
         self._qualifiers['note'].append(self.detection)
         self._qualifiers['note'].extend(self.note)
@@ -263,7 +309,6 @@ class ClusterFeature(Feature):
             self._qualifiers['structure'] = [str(self.structure)]
         if self.probability is not None:
             self._qualifiers['probability'] = [str(self.probability)]
-        new_Cluster = SeqFeature(self.location, type=self.type)
         new_Cluster.qualifiers = self._qualifiers.copy()
         return [new_Cluster]
 
@@ -425,31 +470,18 @@ class Record(object):
         """Adds features to appropriate lists"""
         if not isinstance(feature, Feature):
             raise TypeError("The argument is not an instance of 'Feature'")
-        if feature.type == 'cluster':
-            if not isinstance(feature.location, (FeatureLocation, CompoundLocation)):
-                raise ValueError("location should be an instance of FeatureLocation or CompoundLocation")
+        if isinstance(feature, ClusterFeature):
             clusters = self.get_clusters()
-            clusters.append(None)
-            for index, cluster in enumerate(clusters):
-                if cluster is not None:
-                    if feature.location.start < cluster.location.start:
-                        break
-                else:
-                    clusters[index] = feature
-                    feature.parent_record = self
-                    self.group_cluster_cds(feature)
-                    for index, cluster in enumerate(clusters):
-                        self._cluster_number_dict[cluster] = index+1
-                    return
+            index = find_cluster_pos(clusters, 0, len(clusters)-1, feature)
             clusters.insert(index, feature)
             feature.parent_record = self
-            self.group_cluster_cds(feature)
-            for index, cluster in enumerate(clusters):
-                self._cluster_number_dict[cluster] = index+1
-            return
+            self._update_cluster_cds_links(feature)
+            for i, cluster in enumerate(clusters):
+                self._cluster_number_dict[cluster] = i+1
 
-        elif feature.type == 'CDS':
+        elif isinstance(feature, CDSFeature):
             self._modified_cds.append(feature)
+            self._update_cluster_cds_links(feature)
         else:
             self._modified_generic.append(feature)
 
@@ -470,13 +502,17 @@ class Record(object):
                 self._modified_generic.append(feature)
         return self
 
-    def group_cluster_cds(self, cluster):
+    def _update_cluster_cds_links(self, feature):
         """Link cluster and their CDS features"""
-        clustercdsfeatures = []
-        cdss = self.get_CDSs()
-        for cds in cdss:
-            if cluster.location.start <= cds.location.start <= cluster.location.end or \
-               cluster.location.start <= cds.location.end <= cluster.location.end:
-                clustercdsfeatures.append(cds)
-                cds.cluster = cluster
-        cluster.cdss = clustercdsfeatures
+        if isinstance(feature, ClusterFeature):
+            clustercdsfeatures = []
+            cdss = self.get_CDSs()
+            for cds in cdss:
+                if feature.location.start <= cds.location.start <= feature.location.end or \
+                   feature.location.start <= cds.location.end <= feature.location.end:
+                    clustercdsfeatures.append(cds)
+                    cds.cluster = feature
+            feature.cdss = clustercdsfeatures
+        else:
+            clusters = self.get_clusters()
+            find_cluster(clusters, 0, len(clusters)-1, feature)
