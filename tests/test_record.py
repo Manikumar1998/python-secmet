@@ -89,6 +89,53 @@ class TestRecordMethods(unittest.TestCase):
             for key, value in bgen.qualifiers.items():
                 self.assertEqual(value, mgen.qualifiers[key])
 
+    def test_get_CDS_motifs(self):
+        """Test get_CDSs() in Record"""
+        testfile = self.get_testfile()
+        rec = Record.from_file(testfile)
+        bp_rec = SeqIO.read(testfile, filetype)
+        bp_CDS_motifs = [i for i in bp_rec.features if i.type == 'CDS_motif']
+        mod_CDS_motifs = [i.to_biopython()[0] for i in rec.get_CDS_motifs()]
+        self.assertEqual(len(mod_CDS_motifs), len(bp_CDS_motifs))
+        for b_motif, m_motif in zip(mod_CDS_motifs, bp_CDS_motifs):
+            self.assertIsInstance(m_motif, Bio.SeqFeature.SeqFeature)
+            self.assertEqual(b_motif.type, m_motif.type)
+            self.assertEqual(b_motif.location.__str__(), m_motif.location.__str__())
+            for key, value in b_motif.qualifiers.items():
+                self.assertEqual(value, m_motif.qualifiers[key])
+
+    def test_get_PFAM_domains(self):
+        """Test get_CDSs() in Record"""
+        testfile = self.get_testfile()
+        rec = Record.from_file(testfile)
+        bp_rec = SeqIO.read(testfile, filetype)
+        bp_PFAM_domains = [i for i in bp_rec.features if i.type == 'PFAM_domain']
+        mod_PFAM_domains = [i.to_biopython()[0] for i in rec.get_PFAM_domains()]
+        self.assertEqual(len(mod_PFAM_domains), len(bp_PFAM_domains))
+        for b_fam, m_fam in zip(mod_PFAM_domains, bp_PFAM_domains):
+            self.assertIsInstance(m_fam, Bio.SeqFeature.SeqFeature)
+            self.assertEqual(b_fam.type, m_fam.type)
+            self.assertEqual(b_fam.location.__str__(), m_fam.location.__str__())
+            for key, value in b_fam.qualifiers.items():
+                if value is not None and value:
+                    self.assertEqual(value, m_fam.qualifiers[key])
+
+    def test_get_aSDomains(self):
+        """Test get_CDSs() in Record"""
+        testfile = self.get_testfile()
+        rec = Record.from_file(testfile)
+        bp_rec = SeqIO.read(testfile, filetype)
+        bp_aSDomains = [i for i in bp_rec.features if i.type == 'aSDomain']
+        mod_aSDomains = [i.to_biopython()[0] for i in rec.get_aSDomains()]
+        self.assertEqual(len(mod_aSDomains), len(bp_aSDomains))
+        for b_asdomain, m_asdomain in zip(mod_aSDomains, bp_aSDomains):
+            self.assertIsInstance(m_asdomain, Bio.SeqFeature.SeqFeature)
+            self.assertEqual(b_asdomain.type, m_asdomain.type)
+            self.assertEqual(b_asdomain.location.__str__(), m_asdomain.location.__str__())
+            for key, value in b_asdomain.qualifiers.items():
+                if value is not None and value:
+                    self.assertEqual(value, m_asdomain.qualifiers[key])
+
     def test_get_cluster_number(self):
         """Test get_cluster_number() in Record"""
         testfile = self.get_testfile()
