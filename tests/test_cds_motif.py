@@ -20,9 +20,11 @@ class TestCDS_motifFeature(unittest.TestCase):
         mod_cds_motifs = rec.get_CDS_motifs()
         for bp_motif, mod_motif in zip(bp_cds_motifs, mod_cds_motifs):
             for key, value in bp_motif.qualifiers.items():
-                if value is not None and value:
-                    if hasattr(mod_motif, key):
+                if key == 'note':
+                    #note is modified to notes in secmet
+                    self.assertEqual(bp_motif.qualifiers['note'], mod_motif.notes)
+                else:
+                    if value is not None and value:
+                        if not hasattr(mod_motif, key):
+                            raise AttributeError("%s is not a member of CDS_motifFeature"%key)
                         self.assertEqual(str(value[0]), str(getattr(mod_motif, key)))
-            if 'note' in bp_motif.qualifiers:
-                #note is modified to notes in secmet
-                self.assertEqual(bp_motif.qualifiers['note'], mod_motif.notes)

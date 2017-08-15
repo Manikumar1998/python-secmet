@@ -18,21 +18,25 @@ class TestClusterFeature(unittest.TestCase):
         bp_rec = SeqIO.read(testfile, filetype)
         bp_clusters = [i for i in bp_rec.features if i.type == 'cluster']
         mod_clusters = rec.get_clusters()
+        qualifiers_as_list = ['note', 'product', 'clusterblast', 'subclusterblast', \
+                              'knownclusterblast']
         for bp_cluster, mod_cluster in zip(bp_clusters, mod_clusters):
             for key, value in bp_cluster.qualifiers.items():
                 if value is not None and value:
                     #clusterblast, subclusterblast and knownclusterblast are lists
-                    if key not in ['clusterblast', 'subclusterblast', 'knownclusterblast']:
-                        if hasattr(mod_cluster, key):
-                            self.assertEqual(str(value[0]), str(getattr(mod_cluster, key)))
+                    if key not in qualifiers_as_list:
+                        if not hasattr(mod_cluster, key):
+                            raise AttributeError('%s is not a member of ClusterFeature'%key)
+                        self.assertEqual(str(value[0]), str(getattr(mod_cluster, key)))
                     else:
-                        self.assertEqual(value, getattr(mod_cluster, key))
-            if bp_cluster.qualifiers['product']:
-                #product is modified to products in secmet
-                self.assertEqual(bp_cluster.qualifiers['product'], mod_cluster.get_products())
-            if bp_cluster.qualifiers['note']:
-                #notes will not contain 'Cluster number: ' and 'Detection rules: ''
-                self.assertEqual(len(bp_cluster.qualifiers['note'])-2, len(mod_cluster.notes))
+                        if key == 'note':
+                            #notes will not contain 'Cluster number: ' and 'Detection rules: ''
+                            self.assertEqual(len(value)-2, len(mod_cluster.notes))
+                        elif key == 'product':
+                            #product is modified to products in secmet
+                            self.assertEqual(bp_cluster.qualifiers['product'], mod_cluster.get_products())
+                        else:
+                            self.assertEqual(value, getattr(mod_cluster, key))
 
     def test_add_new_cluster(self):
         """Test for adding a new cluster to record"""
