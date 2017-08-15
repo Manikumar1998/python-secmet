@@ -26,8 +26,10 @@ class TestRecordMethods(unittest.TestCase):
         self.assertEqual(rec.seq, bp_rec.seq)
         # SNAG: Can't compare Reference objects in Biopython :(
         # So delete them to make the test work.
-        del rec.annotations['references']
-        del bp_rec.annotations['references']
+        if 'references' in rec.annotations:
+            del rec.annotations['references']
+        if 'references' in bp_rec.annotations:
+            del bp_rec.annotations['references']
         self.assertEqual(rec.annotations, bp_rec.annotations)
         self.assertEqual(rec.description, bp_rec.description)
 
@@ -54,7 +56,7 @@ class TestRecordMethods(unittest.TestCase):
         for bcluster, mcluster in zip(bp_clusters, mod_clusters):
             self.assertIsInstance(mcluster, Bio.SeqFeature.SeqFeature)
             self.assertEqual(bcluster.type, mcluster.type)
-            self.assertEqual(bcluster.location.__str__(), mcluster.location.__str__())
+            self.assertEqual(str(bcluster.location), str(mcluster.location))
             for key, value in bcluster.qualifiers.items():
                 self.assertEqual(value, mcluster.qualifiers[key])
 
@@ -69,7 +71,7 @@ class TestRecordMethods(unittest.TestCase):
         for bcds, mcds in zip(bp_CDSs, mod_CDSs):
             self.assertIsInstance(mcds, Bio.SeqFeature.SeqFeature)
             self.assertEqual(bcds.type, mcds.type)
-            self.assertEqual(bcds.location.__str__(), mcds.location.__str__())
+            self.assertEqual(str(bcds.location), str(mcds.location))
             for key, value in bcds.qualifiers.items():
                 if key != 'sec_met':
                     self.assertEqual(value, mcds.qualifiers[key])
@@ -86,7 +88,7 @@ class TestRecordMethods(unittest.TestCase):
         for bgen, mgen in zip(bp_gens, mod_gens):
             self.assertIsInstance(mgen, Bio.SeqFeature.SeqFeature)
             self.assertEqual(bgen.type, mgen.type)
-            self.assertEqual(bgen.location.__str__(), mgen.location.__str__())
+            self.assertEqual(str(bgen.location), str(mgen.location))
             for key, value in bgen.qualifiers.items():
                 self.assertEqual(value, mgen.qualifiers[key])
 
@@ -101,7 +103,7 @@ class TestRecordMethods(unittest.TestCase):
         for b_motif, m_motif in zip(mod_CDS_motifs, bp_CDS_motifs):
             self.assertIsInstance(m_motif, Bio.SeqFeature.SeqFeature)
             self.assertEqual(b_motif.type, m_motif.type)
-            self.assertEqual(b_motif.location.__str__(), m_motif.location.__str__())
+            self.assertEqual(str(b_motif.location), str(m_motif.location))
             for key, value in b_motif.qualifiers.items():
                 self.assertEqual(value, m_motif.qualifiers[key])
 
@@ -116,7 +118,7 @@ class TestRecordMethods(unittest.TestCase):
         for b_fam, m_fam in zip(mod_PFAM_domains, bp_PFAM_domains):
             self.assertIsInstance(m_fam, Bio.SeqFeature.SeqFeature)
             self.assertEqual(b_fam.type, m_fam.type)
-            self.assertEqual(b_fam.location.__str__(), m_fam.location.__str__())
+            self.assertEqual(str(b_fam.location), str(m_fam.location))
             for key, value in b_fam.qualifiers.items():
                 if value is not None and value:
                     self.assertEqual(value, m_fam.qualifiers[key])
@@ -132,7 +134,7 @@ class TestRecordMethods(unittest.TestCase):
         for b_asdomain, m_asdomain in zip(mod_aSDomains, bp_aSDomains):
             self.assertIsInstance(m_asdomain, Bio.SeqFeature.SeqFeature)
             self.assertEqual(b_asdomain.type, m_asdomain.type)
-            self.assertEqual(b_asdomain.location.__str__(), m_asdomain.location.__str__())
+            self.assertEqual(str(b_asdomain.location), str(m_asdomain.location))
             for key, value in b_asdomain.qualifiers.items():
                 if value is not None and value:
                     self.assertEqual(value, m_asdomain.qualifiers[key])
