@@ -136,6 +136,9 @@ class GenericFeature(Feature):
             if 'sec_met' in self._qualifiers:
                 self.sec_met.extend(self._qualifiers['sec_met'])
                 del self._qualifiers['sec_met']
+            if 'note' in self._qualifiers:
+                self.notes = self._qualifiers['note']
+                del self._qualifiers['note']
         else:
             self.location = f_location
             if not isinstance(f_type, str):
@@ -178,7 +181,7 @@ class GenericFeature(Feature):
         else:
             if hasattr(self, category):
                 if getattr(self, category):
-                    return getattr(self, category)
+                    return [getattr(self, category)]
         return []
 
     def to_biopython(self):
@@ -198,6 +201,8 @@ class GenericFeature(Feature):
             new_Generic.qualifiers['description'] = [str(self.description)]
         if self.sec_met:
             new_Generic.qualifiers['sec_met'] = self.sec_met
+        if self.notes:
+            new_Generic.qualifiers['note'] = self.notes
         for key, value in self._qualifiers.items():
             new_Generic.qualifiers[key] = value
         return [new_Generic]
