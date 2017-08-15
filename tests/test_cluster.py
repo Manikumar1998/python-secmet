@@ -12,6 +12,28 @@ class TestClusterFeature(unittest.TestCase):
         """File path for testing"""
         return path.join(path.dirname(__file__), 'data', filename)
 
+    def test_ClusterFeature_members(self):
+        testfile = self.get_testfile()
+        rec = Record.from_file(testfile)
+        bp_rec = SeqIO.read(testfile, filetype)
+        bp_clusters = [i for i in bp_rec.features if i.type == 'cluster']
+        mod_clusters = rec.get_clusters()
+        for bp_cluster, mod_cluster in zip(bp_clusters, mod_clusters):
+            for key, value in bp_cluster.qualifiers.items():
+                if value is not None and value:
+                    #clusterblast, subclusterblast and knownclusterblast are lists
+                    if key not in ['clusterblast', 'subclusterblast', 'knownclusterblast']:
+                        if hasattr(mod_cluster, key):
+                            self.assertEqual(str(value[0]), str(getattr(mod_cluster, key)))
+                    else:
+                        self.assertEqual(value, getattr(mod_cluster, key))
+            if bp_cluster.qualifiers['product']:
+                #product is modified to products in secmet
+                self.assertEqual(bp_cluster.qualifiers['product'], mod_cluster.get_products())
+            if bp_cluster.qualifiers['note']:
+                #notes will not contain 'Cluster number: ' and 'Detection rules: ''
+                self.assertEqual(len(bp_cluster.qualifiers['note'])-2, len(mod_cluster.notes))
+
     def test_add_new_cluster(self):
         """Test for adding a new cluster to record"""
         testfile = self.get_testfile()
