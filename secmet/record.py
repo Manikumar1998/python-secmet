@@ -233,7 +233,6 @@ class CDSFeature(Feature):
 
         self._qualifiers = {}
         self.sec_met_predictions = []
-        self.other_qualifiers = {}
         self.type = 'CDS'
 
         if feature is not None:
