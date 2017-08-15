@@ -3,7 +3,8 @@ import unittest
 import Bio
 from Bio import SeqIO
 from Bio.SeqFeature import FeatureLocation
-from secmet.record import Record, GenericFeature, ClusterFeature, CDSFeature
+from secmet.record import Record, GenericFeature, ClusterFeature, CDSFeature \
+                                , CDS_motifFeature, aSDomain, PFAM_domain
 
 #Global variables for test file name and its type
 filename = 'nisin.gbk'
@@ -90,7 +91,7 @@ class TestRecordMethods(unittest.TestCase):
                 self.assertEqual(value, mgen.qualifiers[key])
 
     def test_get_CDS_motifs(self):
-        """Test get_CDSs() in Record"""
+        """Test get_CDS_motifs() in Record"""
         testfile = self.get_testfile()
         rec = Record.from_file(testfile)
         bp_rec = SeqIO.read(testfile, filetype)
@@ -105,7 +106,7 @@ class TestRecordMethods(unittest.TestCase):
                 self.assertEqual(value, m_motif.qualifiers[key])
 
     def test_get_PFAM_domains(self):
-        """Test get_CDSs() in Record"""
+        """Test get_PFAM_domains() in Record"""
         testfile = self.get_testfile()
         rec = Record.from_file(testfile)
         bp_rec = SeqIO.read(testfile, filetype)
@@ -121,7 +122,7 @@ class TestRecordMethods(unittest.TestCase):
                     self.assertEqual(value, m_fam.qualifiers[key])
 
     def test_get_aSDomains(self):
-        """Test get_CDSs() in Record"""
+        """Test get_aSDomains() in Record"""
         testfile = self.get_testfile()
         rec = Record.from_file(testfile)
         bp_rec = SeqIO.read(testfile, filetype)
@@ -151,15 +152,28 @@ class TestRecordMethods(unittest.TestCase):
         no_of_clusters = len(rec.get_clusters())
         no_of_cdss = len(rec.get_CDSs())
         no_of_generics = len(rec.get_generics())
+        no_of_cds_motifs = len(rec.get_CDS_motifs())
+        no_of_pfam_domains = len(rec.get_PFAM_domains())
+        no_of_asdomains = len(rec.get_aSDomains())
+        #Create new Feature's with fake identity and fake location
         new_cluster = ClusterFeature(FeatureLocation(15100, 15200))
         new_cds = CDSFeature(FeatureLocation(200, 300))
         new_generic = GenericFeature(FeatureLocation(350, 450), 'FAKE')
+        new_cds_motif = CDS_motifFeature(FeatureLocation(150, 200))
+        new_pfam_domain = PFAM_domain(FeatureLocation(500, 600))
+        new_asdomain = aSDomain(FeatureLocation(600, 700))
         rec.add_feature(new_cluster)
         rec.add_feature(new_cds)
         rec.add_feature(new_generic)
+        rec.add_feature(new_cds_motif)
+        rec.add_feature(new_pfam_domain)
+        rec.add_feature(new_asdomain)
         clusters = rec.get_clusters()
         self.assertEqual(no_of_clusters+1, len(clusters))
         self.assertEqual(no_of_cdss+1, len(rec.get_CDSs()))
-        self.assertEqual(no_of_generics+1, len(rec._modified_generic))
+        self.assertEqual(no_of_generics+1, len(rec.get_generics()))
+        self.assertEqual(no_of_cds_motifs+1, len(rec.get_CDS_motifs()))
+        self.assertEqual(no_of_pfam_domains+1, len(rec.get_PFAM_domains()))
+        self.assertEqual(no_of_asdomains+1, len(rec.get_aSDomains()))
         for index, cluster in enumerate(clusters):
             self.assertEqual(cluster.get_cluster_number(), index+1)
