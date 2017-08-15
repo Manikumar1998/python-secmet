@@ -630,7 +630,7 @@ class aSDomain(Feature):
                 self.notes = self._qualifiers['note']
 
             if 'specificity' in self._qualifiers:
-                self.notes = self._qualifiers['specificity']
+                self.specificity = self._qualifiers['specificity']
             self.location = feature.location
         else:
             self.location = f_location
@@ -743,6 +743,15 @@ class ClusterFeature(Feature):
 
             if 'probability' in self._qualifiers:
                 self.probability = self._qualifiers['probability'][0]
+
+            if 'subclusterblast' in self._qualifiers:
+                self.subclusterblast = self._qualifiers['subclusterblast']
+
+            if 'clusterblast' in self._qualifiers:
+                self.clusterblast = self._qualifiers['clusterblast']
+
+            if 'knownclusterblast' in self._qualifiers:
+                self.knownclusterblast = self._qualifiers['knownclusterblast']
             self.location = feature.location
         else:
             self.location = f_location
