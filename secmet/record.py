@@ -15,16 +15,15 @@ def cmp_feature_location(a, b):
     return cmp(a.location.end, b.location.end)
 
 def sort_features(seq_record):
-    "Sort features in a seq_record by their position"
-    #Check if all features have a proper location assigned
-    for feature in seq_record.features:
-        assert feature.location is not None
-    #Sort features by location
+    "Sort features in a seq_record using their locations"
     seq_record.features.sort(cmp=cmp_feature_location)
 
 
 def find_new_cluster_pos(clusters, target_cluster):
-    """Search for appropriate position in array to add cluster"""
+    """Binary search for appropriate position in array to add new cluster
+        param clusters: A list of all existing ClusterFeature(s) in the record
+        param target_cluster: An instance of ClusterFeature
+    """
     if not clusters:
         return 0
     start = 0
@@ -49,6 +48,10 @@ def find_new_cluster_pos(clusters, target_cluster):
             start = mid
 
 def find_cluster_of_new_cds(clusters, new_cds):
+    """Binary search to find the corresponding cluster feature of a cds feature
+        param clusters: A list of all existing ClusterFeature(s) in the record
+        param new_cds: An instance of CDSFeature
+    """
     if not clusters:
         return
     start = 0
@@ -70,11 +73,13 @@ def find_cluster_of_new_cds(clusters, new_cds):
 
 
 class Feature(object):
-    """A Feature super class that expands to different subclasses"""
+    """A Feature super class that extends to different subclasses"""
     def __init__(self):
-        """ Initialise a feature object"""
+        """ Initialise a Feature object"""
         self.type = None
         self.notes = []
+
+    #Check for a valid feature location
     def _get_location(self):
         try:
             return self.__location
@@ -95,10 +100,11 @@ class Feature(object):
 
 class GenericFeature(Feature):
     """A GenericFeature Feature subclasses Feature
-        (Features other than CDSFeature and ClusterFeature)
+        (Features other than CDS, cluster, CDS_motif, PFAM_domain and aSDomin)
     """
     def __init__(self, f_location=None, f_type=None, feature=None):
         """Initialise a GenericFeature
+            param f_location: class 'Bio.SeqFeature.FeatureLocation/CompoundLocation'
             param feature: class 'Bio.SeqFeature.SeqFeature'
         """
         super(GenericFeature, self).__init__()
@@ -112,30 +118,39 @@ class GenericFeature(Feature):
         self.sec_met = []
 
         if feature is not None:
+            """Initialise class members(qualifiers) using SeqFeature object"""
             self._qualifiers = feature.qualifiers
+
             self.type = feature.type
             self.location = feature.location
             if 'locus_tag' in self._qualifiers:
                 self.locus_tag = self._qualifiers['locus_tag'][0]
                 del self._qualifiers['locus_tag']
+
             if 'gene' in self._qualifiers:
                 self.gene = self._qualifiers['gene'][0]
                 del self._qualifiers['gene']
+
             if 'translation' in self._qualifiers:
                 self.translation = self._qualifiers['translation'][0]
                 del self._qualifiers['translation']
+
             if 'name' in self._qualifiers:
                 self.translation = self._qualifiers['name'][0]
                 del self._qualifiers['name']
+
             if 'seq' in self._qualifiers:
                 self.seq = self._qualifiers['seq'][0]
                 del self._qualifiers['seq']
+
             if 'description' in self._qualifiers:
                 self.description = self._qualifiers['description'][0]
                 del self._qualifiers['description']
+
             if 'sec_met' in self._qualifiers:
                 self.sec_met.extend(self._qualifiers['sec_met'])
                 del self._qualifiers['sec_met']
+
             if 'note' in self._qualifiers:
                 self.notes = self._qualifiers['note']
                 del self._qualifiers['note']
@@ -208,6 +223,7 @@ class GenericFeature(Feature):
         return [new_Generic]
 
     def __repr__(self):
+        """A string representation of biopython generic features"""
         return repr(self.to_biopython()[0])
 
 
@@ -216,6 +232,7 @@ class CDSFeature(Feature):
 
     def __init__(self, f_location=None, feature=None):
         """Initialise a CDSFeature
+            param f_location: class 'Bio.SeqFeature.FeatureLocation/CompoundLocation'
             param feature: class 'Bio.SeqFeature.SeqFeature'
         """
         super(CDSFeature, self).__init__()
@@ -241,6 +258,7 @@ class CDSFeature(Feature):
         self.type = 'CDS'
 
         if feature is not None:
+            """Initialise class members(qualifiers) using SeqFeature object"""
             self._qualifiers = feature.qualifiers
 
             if 'locus_tag' in self._qualifiers:
@@ -291,13 +309,8 @@ class CDSFeature(Feature):
         else:
             self.location = f_location
 
-
-    def get_id(self):
-        """Returns the id of the CDSFeature"""
-        return self.gene
-
     def get_cluster(self):
-        """Returns a ClusterFeature"""
+        """Returns the corresponding ClusterFeature"""
         return self.cluster
 
     def to_biopython(self):
@@ -340,11 +353,12 @@ class CDSFeature(Feature):
         return [new_CDS]
 
     def __repr__(self):
+        """A string representation of biopython CDS feature"""
         return repr(self.to_biopython()[0])
 
 
 class CDS_motifFeature(Feature):
-    """A CDS_motifFeature which subclasses CDSFeature"""
+    """A CDS_motifFeature which subclasses Feature"""
     def __init__(self, f_location=None, feature=None):
         """Initialise a CDS_motifFeature
             param f_location: class 'Bio.SeqFeature.FeatureLocation/CompoundLocation'
@@ -363,6 +377,7 @@ class CDS_motifFeature(Feature):
         self._qualifiers = {}
 
         if feature is not None:
+            """Initialise class members(qualifiers) using SeqFeature object"""
             self._qualifiers = feature.qualifiers
 
             if 'locus_tag' in self._qualifiers:
@@ -400,6 +415,8 @@ class CDS_motifFeature(Feature):
             self.location = feature.location
         else:
             self.location = f_location
+
+    #Check for a valid score qualifier before assigning
     def _get_score(self):
         try:
             return self.__score
@@ -411,6 +428,7 @@ class CDS_motifFeature(Feature):
         self.__score = value
     score = property(_get_score, _set_score)
 
+    #Check for a valid evalue qualifier before assigning
     def _get_evalue(self):
         try:
             return self.__evalue
@@ -451,6 +469,7 @@ class CDS_motifFeature(Feature):
         return [new_CDS_motif]
 
     def __repr__(self):
+        """A string representation of biopython CDS_motif feature"""
         return repr(self.to_biopython()[0])
 
 
@@ -476,6 +495,7 @@ class PFAM_domain(Feature):
         self._qualifiers = {}
 
         if feature is not None:
+            """Initialise class members(qualifiers) using SeqFeature object"""
             self._qualifiers = feature.qualifiers
 
             if 'locus_tag' in self._qualifiers:
@@ -519,6 +539,8 @@ class PFAM_domain(Feature):
             self.location = feature.location
         else:
             self.location = f_location
+
+    #Check for a valid score qualifier before assigning
     def _get_score(self):
         try:
             return self.__score
@@ -530,6 +552,7 @@ class PFAM_domain(Feature):
         self.__score = value
     score = property(_get_score, _set_score)
 
+    #Check for a valid evalue qualifier before assigning
     def _get_evalue(self):
         try:
             return self.__evalue
@@ -574,6 +597,7 @@ class PFAM_domain(Feature):
         return [new_PFAM_domain]
 
     def __repr__(self):
+        """A string representation of biopython PFAM_domain feature"""
         return repr(self.to_biopython()[0])
 
 
@@ -598,6 +622,7 @@ class aSDomain(Feature):
         self._qualifiers = {}
 
         if feature is not None:
+            """Initialise class members(qualifiers) using SeqFeature object"""
             self._qualifiers = feature.qualifiers
 
             if 'locus_tag' in self._qualifiers:
@@ -638,6 +663,8 @@ class aSDomain(Feature):
             self.location = feature.location
         else:
             self.location = f_location
+
+    #Check for a valid score qualifier before assigning
     def _get_score(self):
         try:
             return self.__score
@@ -649,6 +676,7 @@ class aSDomain(Feature):
         self.__score = value
     score = property(_get_score, _set_score)
 
+    #Check for a valid evalue qualifier before assigning
     def _get_evalue(self):
         try:
             return self.__evalue
@@ -691,6 +719,7 @@ class aSDomain(Feature):
         return [new_aSDomain]
 
     def __repr__(self):
+        """A string representation of the biopython aSDomain feature"""
         return repr(self.to_biopython()[0])
 
 
@@ -716,6 +745,7 @@ class ClusterFeature(Feature):
         self.cdss = []
 
         if feature is not None:
+            """Initialise class members(qualifiers) using SeqFeature object"""
             self._qualifiers = feature.qualifiers
 
             if 'cutoff' in self._qualifiers:
@@ -760,6 +790,7 @@ class ClusterFeature(Feature):
         else:
             self.location = f_location
 
+    #Check if cutoff is an integer before assigning
     def _get_cutoff(self):
         try:
             return self.__cutoff
@@ -771,6 +802,7 @@ class ClusterFeature(Feature):
         self.__cutoff = value
     cutoff = property(_get_cutoff, _set_cutoff)
 
+    #Check if extension is an integer before assigning
     def _get_extension(self):
         try:
             return self.__extension
@@ -799,7 +831,7 @@ class ClusterFeature(Feature):
         return self.parent_record.get_cluster_number(self)
 
     def get_CDSs(self):
-        """Retruns a list of CDS objects which belong to this cluster"""
+        """Retruns a list of CDSFeature(s) which belong to this cluster"""
         return self.cdss
 
     def to_biopython(self):
@@ -826,6 +858,7 @@ class ClusterFeature(Feature):
         return [new_Cluster]
 
     def __repr__(self):
+        """A string representation of biopython cluster feature"""
         return repr(self.to_biopython()[0])
 
 class Record(object):
@@ -855,11 +888,9 @@ class Record(object):
 
     @classmethod
     def from_file(cls, filename):
-
-        """Initialise a record from a file of specified type
+        """Initialise a record from a file
 
         :param string filename:    file name of the file to read
-        :param string filetype:    Type of the inputfile
         """
         filetype = filename.split('.')[-1]
         if filetype in ['gb', 'gbk', 'genbank']:
@@ -955,7 +986,7 @@ class Record(object):
         self._modified_cluster = clusters_list
 
     def get_CDSs(self):
-        """A list of secondary metabolite clusters present in the record"""
+        """A list of secondary metabolite CDS features present in the record"""
         return self._modified_cds
     def set_CDSs(self, cds_list):
         """To set the CDS features of the seq_record"""
@@ -1017,7 +1048,7 @@ class Record(object):
         return self._cluster_number_dict[clusterfeature]
 
     def add_feature(self, feature):
-        """Adds features to appropriate lists"""
+        """Adds feature to appropriate lists"""
         if not isinstance(feature, Feature):
             raise TypeError("The argument is not an instance of 'Feature'")
         if isinstance(feature, ClusterFeature):
@@ -1025,12 +1056,14 @@ class Record(object):
             index = find_new_cluster_pos(clusters, feature)
             clusters.insert(index, feature)
             feature.parent_record = self
+            #Link cluster feature with its cds features
             self._update_cluster_cds_links(feature)
             for i, cluster in enumerate(clusters):
                 self._cluster_number_dict[cluster] = i+1
 
         elif isinstance(feature, CDSFeature):
             self._modified_cds.append(feature)
+            #Link cds feature with its cluster feature
             self._update_cluster_cds_links(feature)
         elif isinstance(feature, CDS_motifFeature):
             self._modified_cds_motif.append(feature)
@@ -1042,7 +1075,7 @@ class Record(object):
             self._modified_generic.append(feature)
 
     def from_biopython(self, record):
-        """Modifies _modified_features list with new Feature instances"""
+        """Modifies _modified_features_* list with new Feature instances"""
         features = record.features
         for feature in features:
             if feature.type == 'CDS':
@@ -1071,7 +1104,7 @@ class Record(object):
         return self
 
     def _update_cluster_cds_links(self, feature):
-        """Link cluster and their corresponding CDS features"""
+        """Link cluster and their CDS features"""
         if isinstance(feature, ClusterFeature):
             clustercdsfeatures = []
             cdss = self.get_CDSs()
@@ -1087,8 +1120,20 @@ class Record(object):
 
 
 class SecMetQualifier(list):
-    """A Secmet class to store sec_met qualifiers"""
+    """A SecMetQualifier class for sec_met qualifiers"""
+
     def __init__(self, clustertype=None, domains=None, kind=None):
+        """Initialise a SecMetQualifier with the given attributes
+            :param clustertype: an instance of str
+            :param domains: a list of SecMetResult instance(s)
+            :param kind: an instance of str
+        """
+        if clustertype is not None and not isinstance(clustertype, str):
+            raise ValueError('clustertype should be an instance of str')
+        if domains is not None and not isinstance(domains, list):
+            raise ValueError('domains should be an instance of list')
+        if kind is not None and not isinstance(kind, str):
+            raise ValueError('kind should be an instance of str')
         self.clustertype = clustertype
         self.domains = domains
         self.kind = kind
@@ -1097,7 +1142,7 @@ class SecMetQualifier(list):
         super(SecMetQualifier, self).__init__()
 
     def __len__(self):
-        """Return length of the sec_met qualifier"""
+        """Return length of the secmet qualifier"""
         count = 0
         if self.clustertype is not None:
             count += 1
@@ -1112,11 +1157,11 @@ class SecMetQualifier(list):
         return count
 
     def __repr__(self):
-        """A string representation of the sec_met qualifier"""
+        """A string representation of the list of sec_met qualifier"""
         return str(self.as_list())
 
     def __nonzero__(self):
-        """Returns False if sec_met doesn't contain any qualifier"""
+        """Returns False if nothing is initialized"""
         if self.clustertype is not None or self.kind is not None or (self.domains is not None and self.domains):
             return True
         if self.nrpspks or self.asf_predictions:
@@ -1138,7 +1183,7 @@ class SecMetQualifier(list):
                 yield asf
 
     def as_list(self):
-        """Returns a list of all sec_met qualifiers"""
+        """Returns sec_met qualifier in a list"""
         self._sec_met = []
         for qual in self:
             self._sec_met.append(qual)
