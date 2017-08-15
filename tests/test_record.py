@@ -145,6 +145,27 @@ class TestRecordMethods(unittest.TestCase):
         for index, cluster in enumerate(clusters):
             self.assertEqual(rec.get_cluster_number(cluster), index+1)
 
+    def test_cluster_cds_links(self):
+        """Test whether cluster(s) and CDS(s) are properly linked"""
+        testfile = self.get_testfile()
+        rec = Record.from_file(testfile)
+        bp_rec = SeqIO.read(testfile, filetype)
+        bp_clusters = [i for i in bp_rec.features if i.type == 'cluster']
+        bp_cdss = [i for i in bp_rec.features if i.type == 'CDS']
+        mod_clusters = rec.get_clusters()
+        self.assertEqual(len(bp_clusters), len(mod_clusters))
+        for bp_cluster, mod_cluster in zip(bp_clusters, mod_clusters):
+            bp_clustercdsfeatures = []
+            for cds in bp_cdss:
+                if bp_cluster.location.start <= cds.location.start <= bp_cluster.location.end or \
+                   bp_cluster.location.start <= cds.location.end <= bp_cluster.location.end:
+                    bp_clustercdsfeatures.append(cds)
+            self.assertEqual(len(bp_clustercdsfeatures), len(mod_cluster.get_CDSs()))
+            for bp_cds, mod_cds in zip(bp_clustercdsfeatures, mod_cluster.get_CDSs()):
+                self.assertEqual(str(bp_cds.location), str(mod_cds.location))
+                self.assertEqual(str(mod_cds.get_cluster().location), str(bp_cluster.location), \
+                                 str(mod_cluster.location))
+
     def test_add_feature(self):
         """Test add_feature() in Record"""
         testfile = self.get_testfile()
