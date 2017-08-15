@@ -353,7 +353,7 @@ class CDS_motifFeature(Feature):
         super(CDS_motifFeature, self).__init__()
         self.label = None
         self.motif = None
-        self.aSDomain_id = None
+        self.asDomain_id = None
         self.aSTool = None
         self.detection = None
         self.database = None
@@ -377,8 +377,8 @@ class CDS_motifFeature(Feature):
             if 'motif' in self._qualifiers:
                 self.motif = self._qualifiers['motif'][0]
 
-            if 'aSDomain_id' in self._qualifiers:
-                self.aSDomain_id = self._qualifiers['aSDomain_id'][0]
+            if 'asDomain_id' in self._qualifiers:
+                self.asDomain_id = self._qualifiers['asDomain_id'][0]
 
             if 'evalue' in self._qualifiers:
                 self.evalue = self._qualifiers['evalue'][0]
@@ -437,8 +437,8 @@ class CDS_motifFeature(Feature):
             self._qualifiers['database'] = [str(self.database)]
         if self.evalue is not None:
             self._qualifiers['evalue'] = [str(self.evalue)]
-        if self.aSDomain_id is not None:
-            self._qualifiers['aSDomain_id'] = [str(self.aSDomain_id)]
+        if self.asDomain_id is not None:
+            self._qualifiers['asDomain_id'] = [str(self.asDomain_id)]
         if self.detection is not None:
             self._qualifiers['detection'] = [str(self.detection)]
         if self.score is not None:
@@ -463,7 +463,7 @@ class PFAM_domain(Feature):
         """
         super(PFAM_domain, self).__init__()
         self.domain = None
-        self.aSDomain_id = None
+        self.asDomain_id = None
         self.locus_tag = None
         self.aSTool = None
         self.detection = None
@@ -490,8 +490,8 @@ class PFAM_domain(Feature):
             if 'label' in self._qualifiers:
                 self.label = self._qualifiers['label']
 
-            if 'aSDomain_id' in self._qualifiers:
-                self.aSDomain_id = self._qualifiers['aSDomain_id'][0]
+            if 'asDomain_id' in self._qualifiers:
+                self.asDomain_id = self._qualifiers['asDomain_id'][0]
 
             if 'evalue' in self._qualifiers:
                 self.evalue = self._qualifiers['evalue'][0]
@@ -554,8 +554,8 @@ class PFAM_domain(Feature):
             self._qualifiers['database'] = [str(self.database)]
         if self.evalue is not None:
             self._qualifiers['evalue'] = [str(self.evalue)]
-        if self.aSDomain_id is not None:
-            self._qualifiers['aSDomain_id'] = [str(self.aSDomain_id)]
+        if self.asDomain_id is not None:
+            self._qualifiers['asDomain_id'] = [str(self.asDomain_id)]
         if self.detection is not None:
             self._qualifiers['detection'] = [str(self.detection)]
         if self.score is not None:
@@ -587,7 +587,7 @@ class aSDomain(Feature):
         super(aSDomain, self).__init__()
         self.domain = None
         self.domain_subtype = None
-        self.aSDomain_id = None
+        self.asDomain_id = None
         self.locus_tag = None
         self.detection = None
         self.database = None
@@ -615,8 +615,8 @@ class aSDomain(Feature):
             if 'label' in self._qualifiers:
                 self.label = self._qualifiers['label']
 
-            if 'aSDomain_id' in self._qualifiers:
-                self.aSDomain_id = self._qualifiers['aSDomain_id'][0]
+            if 'asDomain_id' in self._qualifiers:
+                self.asDomain_id = self._qualifiers['asDomain_id'][0]
 
             if 'evalue' in self._qualifiers:
                 self.evalue = self._qualifiers['evalue'][0]
@@ -673,8 +673,8 @@ class aSDomain(Feature):
             self._qualifiers['database'] = [str(self.database)]
         if self.evalue is not None:
             self._qualifiers['evalue'] = [str(self.evalue)]
-        if self.aSDomain_id is not None:
-            self._qualifiers['aSDomain_id'] = [str(self.aSDomain_id)]
+        if self.asDomain_id is not None:
+            self._qualifiers['asDomain_id'] = [str(self.asDomain_id)]
         if self.detection is not None:
             self._qualifiers['detection'] = [str(self.detection)]
         if self.score is not None:
