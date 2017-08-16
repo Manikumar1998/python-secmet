@@ -2,12 +2,13 @@ from os import path
 import unittest
 import Bio
 from Bio import SeqIO
+from Bio.Seq import Seq
 from Bio.SeqFeature import FeatureLocation
 from secmet.record import Record, GenericFeature, ClusterFeature, CDSFeature \
                                 , CDS_motifFeature, aSDomain, PFAM_domain
 
 #Global variables for test file name and its type
-filename = 'nisin.gbk'
+filename = 'Y16952.3.final.gbk'
 filetype = 'genbank'
 
 class TestRecordMethods(unittest.TestCase):
@@ -30,11 +31,77 @@ class TestRecordMethods(unittest.TestCase):
             del rec.annotations['references']
         if 'references' in bp_rec.annotations:
             del bp_rec.annotations['references']
+        self.assertEqual(len(rec), 66669)
         self.assertEqual(rec.annotations, bp_rec.annotations)
         self.assertEqual(rec.description, bp_rec.description)
 
+    def test_empty_Record(self):
+        """Test the identifiers of empty Record"""
+        rec = Record()
+        #seq should be a instance of Bio.Seq.Seq
+        try:
+            rec.seq = 'FAKE'
+        except ValueError:
+            pass
+        #description, name and id are strings
+        try:
+            rec.description = 123
+        except ValueError:
+            pass
+
+        try:
+            rec.name = 123
+        except ValueError:
+            pass
+        try:
+            rec.id = 123
+        except ValueError:
+            pass
+        rec.id = "fake_id"
+        rec.name = 'fake_name'
+        rec.seq = Seq("FAKE")
+        rec.description = 'fake_description'
+        self.assertEqual(rec.id, 'fake_id')
+        self.assertEqual(rec.name, 'fake_name')
+        self.assertEqual(rec.seq, Seq("FAKE"))
+        self.assertEqual(rec.description, 'fake_description')
+        self.assertEqual(rec.annotations, {})
+        try:
+            rec.add_annotation(12, 34)
+        except ValueError:
+            pass
+        rec.add_annotation('fake_key', 'fake_value')
+        self.assertEqual(rec.annotations, {'fake_key': 'fake_value'})
+
+    def test_setters(self):
+        """Test setters for features lists"""
+        testfile = self.get_testfile()
+        rec = Record.from_file(testfile)
+        self.assertNotEqual(rec.get_CDSs(), [])
+        self.assertNotEqual(rec.get_clusters(), [])
+        self.assertNotEqual(rec.get_PFAM_domains(), [])
+        self.assertNotEqual(rec.get_aSDomains(), [])
+        self.assertNotEqual(rec.get_generics(), [])
+
+        rec.set_CDSs([])
+        rec.set_clusters([])
+        rec.set_generics([])
+        rec.set_CDS_motifs([])
+        rec.set_PFAM_domains([])
+        rec.set_aSDomains([])
+
+        self.assertEqual(rec.get_CDSs(), [])
+        self.assertEqual(rec.get_clusters(), [])
+        self.assertEqual(rec.get_PFAM_domains(), [])
+        self.assertEqual(rec.get_aSDomains(), [])
+        self.assertEqual(rec.get_generics(), [])
+
     def test_from_biopython(self):
         """Test from_biopython() in Record"""
+        try:
+            rec = Record('fake_record')
+        except:
+            pass
         testfile = self.get_testfile()
         rec = Record.from_file(testfile)
         self.assertIsInstance(rec.from_biopython(rec._record), Record)
@@ -141,11 +208,19 @@ class TestRecordMethods(unittest.TestCase):
 
     def test_get_cluster_number(self):
         """Test get_cluster_number() in Record"""
-        testfile = self.get_testfile()
-        rec = Record.from_file(testfile)
-        clusters = rec.get_clusters()
-        for index, cluster in enumerate(clusters):
-            self.assertEqual(rec.get_cluster_number(cluster), index+1)
+        rec = Record()
+        cluster1 = ClusterFeature(FeatureLocation(500, 1500))
+        cluster2 = ClusterFeature(FeatureLocation(5000, 6000))
+        cluster3 = ClusterFeature(FeatureLocation(2500, 4000))
+        rec.add_feature(cluster2)
+        self.assertEqual(1, cluster2.get_cluster_number())
+        rec.add_feature(cluster1)
+        self.assertEqual(1, cluster1.get_cluster_number())
+        self.assertEqual(2, cluster2.get_cluster_number())
+        rec.add_feature(cluster3)
+        self.assertEqual(1, cluster1.get_cluster_number())
+        self.assertEqual(3, cluster2.get_cluster_number())
+        self.assertEqual(2, cluster3.get_cluster_number())
 
     def test_cluster_cds_links(self):
         """Test whether cluster(s) and CDS(s) are properly linked"""
@@ -168,6 +243,22 @@ class TestRecordMethods(unittest.TestCase):
                 self.assertEqual(str(mod_cds.get_cluster().location), str(bp_cluster.location), \
                                  str(mod_cluster.location))
 
+    def test_add_feature_cds(self):
+        rec = Record()
+        cluster1 = ClusterFeature(FeatureLocation(1, 1000))
+        cluster2 = ClusterFeature(FeatureLocation(2000, 3000))
+        cluster3 = ClusterFeature(FeatureLocation(4000, 5000))
+        cds = CDSFeature(FeatureLocation(4500, 4600))
+        rec.add_feature(cds)
+        #If no clusters are present None should be returned
+        self.assertEqual(cds.get_cluster(), None)
+        rec.set_CDSs([])
+        rec.add_feature(cluster1)
+        rec.add_feature(cluster2)
+        rec.add_feature(cluster3)
+        rec.add_feature(cds)
+        self.assertEqual(cds.get_cluster(), cluster3)
+
     def test_add_feature(self):
         """Test add_feature() in Record"""
         testfile = self.get_testfile()
@@ -179,8 +270,9 @@ class TestRecordMethods(unittest.TestCase):
         no_of_pfam_domains = len(rec.get_PFAM_domains())
         no_of_asdomains = len(rec.get_aSDomains())
         #Create new Feature's with fake identity and fake location
-        new_cluster = ClusterFeature(FeatureLocation(15100, 15200))
-        new_cds = CDSFeature(FeatureLocation(200, 300))
+        invalid_feature = 'INVALID_FEATURE'
+        new_cluster = ClusterFeature(FeatureLocation(1000, 2000))
+        new_cds = CDSFeature(FeatureLocation(1500, 1700))
         new_generic = GenericFeature(FeatureLocation(350, 450), 'FAKE')
         new_cds_motif = CDS_motifFeature(FeatureLocation(150, 200))
         new_pfam_domain = PFAM_domain(FeatureLocation(500, 600))
@@ -192,6 +284,10 @@ class TestRecordMethods(unittest.TestCase):
         rec.add_feature(new_pfam_domain)
         rec.add_feature(new_asdomain)
         clusters = rec.get_clusters()
+        try:
+            rec.add_feature(invalid_feature)
+        except TypeError:
+            pass
         self.assertEqual(no_of_clusters+1, len(clusters))
         self.assertEqual(no_of_cdss+1, len(rec.get_CDSs()))
         self.assertEqual(no_of_generics+1, len(rec.get_generics()))
