@@ -1,10 +1,10 @@
 from os import path
 import unittest
 from Bio import SeqIO
-from Bio.SeqFeature import FeatureLocation
+from Bio.SeqFeature import SeqFeature, FeatureLocation
 from secmet.record import Record, ClusterFeature
 
-filename = 'nisin.gbk'
+filename = 'Y16952.3.final.gbk'
 filetype = 'genbank'
 
 class TestClusterFeature(unittest.TestCase):
@@ -12,12 +12,23 @@ class TestClusterFeature(unittest.TestCase):
         """File path for testing"""
         return path.join(path.dirname(__file__), 'data', filename)
 
+    def BioFeature(self):
+        biofeature = SeqFeature(location=FeatureLocation(10, 100))
+        biofeature.qualifiers = {'contig_edge': ['fake_contig_edge'], 'detection': ['fake_detection'],\
+                                 'product': ['fake_products'], 'structure': ['fake_structure'],\
+                                 'note': ['Cluster number: 1', 'Detection rule(s): fake_detection', 'fake_notes'],\
+                                 'probability': ['fake_probability'], 'subclusterblast': ['fake_subclusterblast'],\
+                                 'knownclusterblast': ['fake_knownclusterblast'], 'clusterblast': ['fake_clusterblast'],\
+                                 'unknown_qualifier': ['fake_qualifier']}
+        return biofeature
+
     def test_ClusterFeature_members(self):
         testfile = self.get_testfile()
         rec = Record.from_file(testfile)
         bp_rec = SeqIO.read(testfile, filetype)
         bp_clusters = [i for i in bp_rec.features if i.type == 'cluster']
         mod_clusters = rec.get_clusters()
+        #Segregate out qualifiers that are stored in list form
         qualifiers_as_list = ['note', 'product', 'clusterblast', 'subclusterblast', \
                               'knownclusterblast']
         for bp_cluster, mod_cluster in zip(bp_clusters, mod_clusters):
@@ -37,6 +48,51 @@ class TestClusterFeature(unittest.TestCase):
                             self.assertEqual(bp_cluster.qualifiers['product'], mod_cluster.get_products())
                         else:
                             self.assertEqual(value, getattr(mod_cluster, key))
+        cluster = ClusterFeature(FeatureLocation(100, 1000))
+        #cutoff, extension should be numbers
+        try:
+            cluster.cutoff = '-a5000'
+        except TypeError:
+            pass
+        try:
+            cluster.extension = 'a5000'
+        except TypeError:
+            pass
+
+        #If valid qualifiers and values are added, We shouldn't get an error
+        try:
+            cluster.cutoff = 50000
+            cluster.extension = 50000
+        except:
+            raise RuntimeError('Secmet unable to add valid qualifiers')
+
+    def test_BioFeature_to_ClsuterFeature(self):
+        biofeature = self.BioFeature()
+        cluster_feature = ClusterFeature(feature=biofeature)
+        self.assertEqual(str(cluster_feature.location), str(FeatureLocation(10, 100)))
+        self.assertEqual(cluster_feature.type, 'cluster')
+        self.assertEqual(cluster_feature.contig_edge, 'fake_contig_edge')
+        self.assertEqual(cluster_feature.detection, 'Detection rule(s): fake_detection')
+        self.assertEqual(cluster_feature.products, ['fake_products'])
+        self.assertEqual(cluster_feature.structure, 'fake_structure')
+        self.assertEqual(cluster_feature.probability, 'fake_probability')
+        self.assertEqual(cluster_feature.subclusterblast, ['fake_subclusterblast'])
+        self.assertEqual(cluster_feature.knownclusterblast, ['fake_knownclusterblast'])
+        self.assertEqual(cluster_feature.clusterblast, ['fake_clusterblast'])
+        self.assertEqual(cluster_feature.notes, ['fake_notes'])
+        self.assertEqual(cluster_feature._qualifiers['unknown_qualifier'], ['fake_qualifier'])
+        self.assertEqual(repr(cluster_feature), repr(cluster_feature.to_biopython()[0]))
+        self.assertIsInstance(cluster_feature.to_biopython()[0], SeqFeature)
+
+    def test_add_product(self):
+        cluster = ClusterFeature(FeatureLocation(1000, 10000))
+        self.assertEqual([], cluster.get_products())
+        try:
+            cluster.add_product(111)
+        except TypeError:
+            pass
+        cluster.add_product('fake_product')
+        self.assertEqual(['fake_product'], cluster.get_products())
 
     def test_add_new_cluster(self):
         """Test for adding a new cluster to record"""
