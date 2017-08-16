@@ -136,7 +136,7 @@ class GenericFeature(Feature):
                 del self._qualifiers['translation']
 
             if 'name' in self._qualifiers:
-                self.translation = self._qualifiers['name'][0]
+                self.name = self._qualifiers['name'][0]
                 del self._qualifiers['name']
 
             if 'seq' in self._qualifiers:
@@ -827,7 +827,7 @@ class ClusterFeature(Feature):
     def get_cluster_number(self):
         """Returns the clusternumber of the cluster"""
         if self.parent_record is None:
-            raise ValueError('Parent record is None')
+            return 0
         return self.parent_record.get_cluster_number(self)
 
     def get_CDSs(self):
