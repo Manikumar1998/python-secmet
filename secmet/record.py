@@ -36,7 +36,7 @@ def find_new_cluster_pos(clusters, target_cluster):
                 return start+1
         except IndexError:
             return start+1
-        mid = start+(end-start)/2
+        mid = start+((end-start)/2+1)
         if start == end or mid == start:
             if target_cluster.location.start < clusters[0].location.start:
                 return 0
@@ -63,12 +63,12 @@ def find_cluster_of_new_cds(clusters, new_cds):
             clusters[start].cdss.append(new_cds)
             new_cds.cluster = clusters[start]
             return
-        mid = start+(end-start)/2
+        mid = start+((end-start)/2+1)
         if start == end or mid == start:
             return
         if clusters[mid].location.start > new_cds.location.start:
             end = mid
-        elif clusters[mid].location.start <= new_cds.location.start:
+        else:
             start = mid
 
 
@@ -81,10 +81,7 @@ class Feature(object):
 
     #Check for a valid feature location
     def _get_location(self):
-        try:
-            return self.__location
-        except:
-            raise ValueError('Unassigned location')
+        return self.__location
     def _set_location(self, value):
         if not isinstance(value, (FeatureLocation, CompoundLocation)):
             raise TypeError("Location must be an instance of 'FeatureLocation' or 'CompoundLocation'")
@@ -162,10 +159,10 @@ class GenericFeature(Feature):
 
     def add_qualifier(self, category, info):
         """Adds a qualifier to qualifiers dictionary"""
-        if not isinstance(category, str) and isinstance(info, (str, list)):
+        if not isinstance(category, str) or not isinstance(info, (str, list)):
             raise TypeError("Type of qualifiers should be 'str'")
         if category in ['evalue', 'score', 'probability']:
-            if not (info.replace('.', '')).replace('E-', '').isdigit():
+            if not (((info.replace('.', '')).replace('E-', '')).replace('-', '')).replace('+', '').isdigit():
                 raise ValueError('%s should be a number'% category)
         if hasattr(self, category):
             if isinstance(getattr(self, category), list):
@@ -197,6 +194,9 @@ class GenericFeature(Feature):
             if hasattr(self, category):
                 if getattr(self, category):
                     return [getattr(self, category)]
+            elif hasattr(self, category.lower()):
+                if getattr(self, category.lower()):
+                    return [getattr(self, category.lower())]
         return []
 
     def to_biopython(self):
@@ -244,9 +244,10 @@ class CDSFeature(Feature):
         self.gene = None
         self.translation = None
         self.cluster = None
-        self.EC_number = None
         self.transl_table = None
         self.source = None
+        self.db_xref = []
+        self.EC_number = []
         self.aSProdPred = []
         self.aSASF_choice = []
         self.aSASF_note = []
@@ -280,7 +281,7 @@ class CDSFeature(Feature):
                 self.notes = self._qualifiers['note']
 
             if 'EC_number' in self._qualifiers:
-                self.EC_number = self._qualifiers['EC_number'][0]
+                self.EC_number = self._qualifiers['EC_number']
 
             if 'transl_table' in self._qualifiers:
                 self.transl_table = self._qualifiers['transl_table'][0]
@@ -289,19 +290,22 @@ class CDSFeature(Feature):
                 self.source = self._qualifiers['source'][0]
 
             if 'aSASF_choice' in self._qualifiers:
-                self.aSProdPred = self._qualifiers['aSASF_choiceS']
+                self.aSASF_choice = self._qualifiers['aSASF_choice']
 
             if 'aSASF_note' in self._qualifiers:
-                self.aSProdPred = self._qualifiers['aSASF_note']
+                self.aSASF_note = self._qualifiers['aSASF_note']
 
             if 'aSASF_prediction' in self._qualifiers:
-                self.aSProdPred = self._qualifiers['aSASF_prediction']
+                self.aSASF_prediction = self._qualifiers['aSASF_prediction']
 
             if 'aSASF_scaffold' in self._qualifiers:
-                self.aSProdPred = self._qualifiers['aSASF_scaffold']
+                self.aSASF_scaffold = self._qualifiers['aSASF_scaffold']
 
             if 'aSProdPred' in self._qualifiers:
                 self.aSProdPred = self._qualifiers['aSProdPred']
+
+            if 'db_xref' in self._qualifiers:
+                self.db_xref = self._qualifiers['db_xref']
 
             if 'sec_met_predictions' in self._qualifiers:
                 self.sec_met_predictions = self._qualifiers['sec_met_predictions']
@@ -332,11 +336,13 @@ class CDSFeature(Feature):
         if self.notes:
             self._qualifiers['note'] = self.notes
         if self.EC_number is not None:
-            self._qualifiers['EC_number'] = [str(self.EC_number)]
+            self._qualifiers['EC_number'] = self.EC_number
         if self.transl_table is not None:
             self._qualifiers['transl_table'] = [str(self.transl_table)]
         if self.source is not None:
             self._qualifiers['source'] = [str(self.source)]
+        if self.db_xref:
+            self._qualifiers['db_xref'] = self.db_xref
         if self.aSASF_choice:
             self._qualifiers['aSASF_choice'] = self.aSASF_choice
         if self.aSASF_note:
@@ -374,6 +380,11 @@ class CDS_motifFeature(Feature):
         self.translation = None
         self.locus_tag = None
         self.type = 'CDS_motif'
+        self.aSProdPred = []
+        self.aSASF_choice = []
+        self.aSASF_note = []
+        self.aSASF_prediction = []
+        self.aSASF_scaffold = []
         self._qualifiers = {}
 
         if feature is not None:
@@ -410,6 +421,21 @@ class CDS_motifFeature(Feature):
             if 'database' in self._qualifiers:
                 self.database = self._qualifiers['database'][0]
 
+            if 'aSASF_choice' in self._qualifiers:
+                self.aSASF_choice = self._qualifiers['aSASF_choice']
+
+            if 'aSASF_note' in self._qualifiers:
+                self.aSASF_note = self._qualifiers['aSASF_note']
+
+            if 'aSASF_prediction' in self._qualifiers:
+                self.aSASF_prediction = self._qualifiers['aSASF_prediction']
+
+            if 'aSASF_scaffold' in self._qualifiers:
+                self.aSASF_scaffold = self._qualifiers['aSASF_scaffold']
+
+            if 'aSProdPred' in self._qualifiers:
+                self.aSProdPred = self._qualifiers['aSProdPred']
+
             if 'note' in self._qualifiers:
                 self.notes = self._qualifiers['note']
             self.location = feature.location
@@ -423,8 +449,8 @@ class CDS_motifFeature(Feature):
         except:
             return None
     def _set_score(self, value):
-        if not ((value.replace('.', '')).replace('-', '')).isdigit():
-            raise TypeError("score must be a number")
+        if not (((value.replace('.', '')).replace('-', ''))).replace('+', '').isdigit():
+            raise ValueError("score must be a number")
         self.__score = value
     score = property(_get_score, _set_score)
 
@@ -436,7 +462,7 @@ class CDS_motifFeature(Feature):
             return None
     def _set_evalue(self, value):
         if not ((value.replace('.', '')).replace('E-', '').replace('E+', '')).isdigit():
-            raise TypeError("evalue must be an number")
+            raise ValueError("evalue must be an number")
         self.__evalue = value
     evalue = property(_get_evalue, _set_evalue)
 
@@ -463,6 +489,16 @@ class CDS_motifFeature(Feature):
             self._qualifiers['score'] = [str(self.score)]
         if self.aSTool is not None:
             self._qualifiers['aSTool'] = [str(self.aSTool)]
+        if self.aSASF_choice:
+            self._qualifiers['aSASF_choice'] = self.aSASF_choice
+        if self.aSASF_note:
+            self._qualifiers['aSASF_note'] = self.aSASF_note
+        if self.aSASF_prediction:
+            self._qualifiers['aSASF_prediction'] = self.aSASF_prediction
+        if self.aSASF_scaffold:
+            self._qualifiers['aSASF_scaffold'] = self.aSASF_scaffold
+        if self.aSProdPred:
+            self._qualifiers['aSProdPred'] = self.aSProdPred
         if self.notes:
             self._qualifiers['note'] = self.notes
         new_CDS_motif.qualifiers = self._qualifiers.copy()
@@ -491,6 +527,11 @@ class PFAM_domain(Feature):
         self.description = None
         self.db_xref = []
         self.label = []
+        self.aSProdPred = []
+        self.aSASF_choice = []
+        self.aSASF_note = []
+        self.aSASF_prediction = []
+        self.aSASF_scaffold = []
         self.type = 'PFAM_domain'
         self._qualifiers = {}
 
@@ -534,6 +575,21 @@ class PFAM_domain(Feature):
             if 'description' in self._qualifiers:
                 self.description = self._qualifiers['description'][0]
 
+            if 'aSASF_choice' in self._qualifiers:
+                self.aSASF_choice = self._qualifiers['aSASF_choice']
+
+            if 'aSASF_note' in self._qualifiers:
+                self.aSASF_note = self._qualifiers['aSASF_note']
+
+            if 'aSASF_prediction' in self._qualifiers:
+                self.aSASF_prediction = self._qualifiers['aSASF_prediction']
+
+            if 'aSASF_scaffold' in self._qualifiers:
+                self.aSASF_scaffold = self._qualifiers['aSASF_scaffold']
+
+            if 'aSProdPred' in self._qualifiers:
+                self.aSProdPred = self._qualifiers['aSProdPred']
+
             if 'note' in self._qualifiers:
                 self.notes = self._qualifiers['note']
             self.location = feature.location
@@ -548,7 +604,7 @@ class PFAM_domain(Feature):
             return None
     def _set_score(self, value):
         if not ((value.replace('.', '')).replace('-', '')).isdigit():
-            raise TypeError("score must be a number")
+            raise ValueError("score must be a number")
         self.__score = value
     score = property(_get_score, _set_score)
 
@@ -560,7 +616,7 @@ class PFAM_domain(Feature):
             return None
     def _set_evalue(self, value):
         if not ((value.replace('.', '')).replace('E-', '').replace('E+', '')).isdigit():
-            raise TypeError("evalue must be an number")
+            raise ValueError("evalue must be an number")
         self.__evalue = value
     evalue = property(_get_evalue, _set_evalue)
 
@@ -591,6 +647,16 @@ class PFAM_domain(Feature):
             self._qualifiers['description'] = [str(self.description)]
         if self.db_xref is not None:
             self._qualifiers['db_xref'] = self.db_xref
+        if self.aSASF_choice:
+            self._qualifiers['aSASF_choice'] = self.aSASF_choice
+        if self.aSASF_note:
+            self._qualifiers['aSASF_note'] = self.aSASF_note
+        if self.aSASF_prediction:
+            self._qualifiers['aSASF_prediction'] = self.aSASF_prediction
+        if self.aSASF_scaffold:
+            self._qualifiers['aSASF_scaffold'] = self.aSASF_scaffold
+        if self.aSProdPred:
+            self._qualifiers['aSProdPred'] = self.aSProdPred
         if self.notes:
             self._qualifiers['note'] = self.notes
         new_PFAM_domain.qualifiers = self._qualifiers.copy()
@@ -618,6 +684,11 @@ class aSDomain(Feature):
         self.translation = None
         self.label = []
         self.specificity = []
+        self.aSProdPred = []
+        self.aSASF_choice = []
+        self.aSASF_note = []
+        self.aSASF_prediction = []
+        self.aSASF_scaffold = []
         self.type = 'aSDomain'
         self._qualifiers = {}
 
@@ -658,6 +729,21 @@ class aSDomain(Feature):
             if 'note' in self._qualifiers:
                 self.notes = self._qualifiers['note']
 
+            if 'aSASF_choice' in self._qualifiers:
+                self.aSASF_choice = self._qualifiers['aSASF_choice']
+
+            if 'aSASF_note' in self._qualifiers:
+                self.aSASF_note = self._qualifiers['aSASF_note']
+
+            if 'aSASF_prediction' in self._qualifiers:
+                self.aSASF_prediction = self._qualifiers['aSASF_prediction']
+
+            if 'aSASF_scaffold' in self._qualifiers:
+                self.aSASF_scaffold = self._qualifiers['aSASF_scaffold']
+
+            if 'aSProdPred' in self._qualifiers:
+                self.aSProdPred = self._qualifiers['aSProdPred']
+
             if 'specificity' in self._qualifiers:
                 self.specificity = self._qualifiers['specificity']
             self.location = feature.location
@@ -672,7 +758,7 @@ class aSDomain(Feature):
             return None
     def _set_score(self, value):
         if not ((value.replace('.', '')).replace('-', '')).isdigit():
-            raise TypeError("score must be a number")
+            raise ValueError("score must be a number")
         self.__score = value
     score = property(_get_score, _set_score)
 
@@ -684,7 +770,7 @@ class aSDomain(Feature):
             return None
     def _set_evalue(self, value):
         if not ((value.replace('.', '')).replace('E-', '').replace('E+', '')).isdigit():
-            raise TypeError("evalue must be an number")
+            raise ValueError("evalue must be an number")
         self.__evalue = value
     evalue = property(_get_evalue, _set_evalue)
 
@@ -711,6 +797,16 @@ class aSDomain(Feature):
             self._qualifiers['domain_subtype'] = [str(self.domain_subtype)]
         if self.domain is not None:
             self._qualifiers['domain'] = [str(self.domain)]
+        if self.aSASF_choice:
+            self._qualifiers['aSASF_choice'] = self.aSASF_choice
+        if self.aSASF_note:
+            self._qualifiers['aSASF_note'] = self.aSASF_note
+        if self.aSASF_prediction:
+            self._qualifiers['aSASF_prediction'] = self.aSASF_prediction
+        if self.aSASF_scaffold:
+            self._qualifiers['aSASF_scaffold'] = self.aSASF_scaffold
+        if self.aSProdPred:
+            self._qualifiers['aSProdPred'] = self.aSProdPred
         if self.notes:
             self._qualifiers['note'] = self.notes
         if self.specificity:
@@ -838,12 +934,18 @@ class ClusterFeature(Feature):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
         new_Cluster = SeqFeature(self.location, type=self.type)
         self._qualifiers['note'] = ["Cluster number: " + str(self.get_cluster_number())]
-        self._qualifiers['note'].append(self.detection)
-        self._qualifiers['note'].extend(self.notes)
-        self._qualifiers['cutoff'] = [str(self.cutoff)]
-        self._qualifiers['extension'] = [str(self.extension)]
-        self._qualifiers['product'] = self.products
-        self._qualifiers['contig_edge'] = [str(self.contig_edge)]
+        if self.detection is not None:
+            self._qualifiers['note'].append(self.detection)
+        if self.notes:
+            self._qualifiers['note'].extend(self.notes)
+        if self.cutoff is not None:
+            self._qualifiers['cutoff'] = [str(self.cutoff)]
+        if self.extension is not None:
+            self._qualifiers['extension'] = [str(self.extension)]
+        if self.products:
+            self._qualifiers['product'] = self.products
+        if self.contig_edge is not None:
+            self._qualifiers['contig_edge'] = [str(self.contig_edge)]
         if self.structure is not None:
             self._qualifiers['structure'] = [str(self.structure)]
         if self.probability is not None:
@@ -982,7 +1084,7 @@ class Record(object):
         """A list of secondary metabolite clusters present in the record"""
         return self._modified_cluster
     def set_clusters(self, clusters_list):
-        """To set the clusters of the seq_record"""
+        """To set the cluster features of the seq_record"""
         self._modified_cluster = clusters_list
 
     def get_CDSs(self):
@@ -996,18 +1098,21 @@ class Record(object):
         """A list of secondary metabolite CDS_motifs present in the record"""
         return self._modified_cds_motif
     def set_CDS_motifs(self, cds_motif_list):
-        """To set the cds_motifs features of the seq_record"""
+        """To set the CDS_motif features of the seq_record"""
         self._modified_cds_motif = cds_motif_list
 
     def get_PFAM_domains(self):
         """A list of secondary metabolite PFAM_domains present in the record"""
         return self._modified_pfam_domain
+    def set_PFAM_domains(self, pfam_domains_list):
+        """To set the PFAM_domain features of the seq_record"""
+        self._modified_pfam_domain = pfam_domains_list
 
     def get_aSDomains(self):
         """A list of secondary metabolite aSDomains present in the record"""
         return self._modified_asdomain
     def set_aSDomains(self, asdomains_list):
-        """To set the asdomains features of the seq_record"""
+        """To set the aSDomain features of the seq_record"""
         self._modified_asdomain = asdomains_list
 
     def get_generics(self):
@@ -1016,14 +1121,6 @@ class Record(object):
     def set_generics(self, generics_list):
         """To set the generic features of the seq_record"""
         self._modified_generic = generics_list
-
-    def get_secmet_features(self):
-        """Return all features with sec_met qualifier"""
-        secmet_features = self.get_CDSs()
-        for generic in self.get_generics():
-            if generic.sec_met:
-                secmet_features.append(generic)
-        return secmet_features
 
     def to_biopython(self):
         """Returns a Bio.SeqRecord instance of the record"""
@@ -1129,11 +1226,11 @@ class SecMetQualifier(list):
             :param kind: an instance of str
         """
         if clustertype is not None and not isinstance(clustertype, str):
-            raise ValueError('clustertype should be an instance of str')
+            raise TypeError('clustertype should be an instance of str')
         if domains is not None and not isinstance(domains, list):
-            raise ValueError('domains should be an instance of list')
+            raise TypeError('domains should be an instance of list')
         if kind is not None and not isinstance(kind, str):
-            raise ValueError('kind should be an instance of str')
+            raise TypeError('kind should be an instance of str')
         self.clustertype = clustertype
         self.domains = domains
         self.kind = kind
@@ -1159,14 +1256,6 @@ class SecMetQualifier(list):
     def __repr__(self):
         """A string representation of the list of sec_met qualifier"""
         return str(self.as_list())
-
-    def __nonzero__(self):
-        """Returns False if nothing is initialized"""
-        if self.clustertype is not None or self.kind is not None or (self.domains is not None and self.domains):
-            return True
-        if self.nrpspks or self.asf_predictions:
-            return True
-        return False
 
     def __iter__(self):
         if self.clustertype is not None:
