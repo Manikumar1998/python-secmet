@@ -262,6 +262,9 @@ class CDSFeature(Feature):
             """Initialise class members(qualifiers) using SeqFeature object"""
             self._qualifiers = feature.qualifiers
 
+            if 'sec_met' in self._qualifiers:
+                self.sec_met = self._map_sec_met_list_to_SecMetQualifier(self._qualifiers['sec_met'])
+
             if 'locus_tag' in self._qualifiers:
                 self.locus_tag = self._qualifiers['locus_tag'][0]
 
@@ -316,6 +319,44 @@ class CDSFeature(Feature):
     def get_cluster(self):
         """Returns the corresponding ClusterFeature"""
         return self.cluster
+
+    def _map_sec_met_list_to_SecMetQualifier(self, sec_met_as_list):
+        """Convert sec_met in list form to SecMetQualifier() form"""
+        self._clustertype = None
+        self._domains = None
+        self._kind = None
+        self._nrpspks = []
+        self._asf_predictions = []
+        for qualifier in sec_met_as_list:
+            if qualifier.startswith('Type: '):
+                self._clustertype = qualifier.split()[-1]
+            elif qualifier.startswith('Kind: '):
+                self._kind = qualifier.split()[-1]
+            elif qualifier.startswith('Domains detected: '):
+                qualifier = qualifier[18:]
+                domains = qualifier.split(';')
+                self._domains = []
+                for domain in domains:
+                    domain_name = domain.partition(" (")[0].replace(" ", "")
+                    evalue = domain.partition("E-value: ")[2].partition(",")[0]
+                    bitscore = domain.partition("bitscore: ")[2].partition(",")[0]
+                    nr_seeds = domain.partition("seeds: ")[2].partition(")")[0]
+                    sec_met_result = SecMetResult()
+                    sec_met_result.query_id = domain_name
+                    sec_met_result.evalue = evalue
+                    sec_met_result.bitscore = bitscore
+                    sec_met_result.nseeds = nr_seeds
+                    self._domains.append(sec_met_result)
+            elif qualifier.startswith('ASF-prediction: '):
+                self._asf_predictions.append(qualifier)
+            elif qualifier.startswith('NRPS/PKS '):
+                self._nrpspks.append(qualifier)
+        sec_met = SecMetQualifier(self._clustertype, self._domains, self._kind)
+        if self._nrpspks:
+            sec_met.nrpspks = self._nrpspks
+        if self._asf_predictions:
+            sec_met.asf_prediction = self._asf_predictions
+        return sec_met
 
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
@@ -1277,3 +1318,22 @@ class SecMetQualifier(list):
         for qual in self:
             self._sec_met.append(qual)
         return self._sec_met
+
+class SecMetResult():
+    def __init__(self, res=None, nseeds=None):
+        self.query_id = None
+        self.evalue = None
+        self.bitscore = None
+        self.nseeds = None
+        if res is not None and nseeds is not None:
+            self.query_id = res.query_id
+            self.evalue = res.evalue
+            self.bitscore = res.bitscore
+            self.nseeds = nseeds
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return "{} (E-value: {}, bitscore: {}, seeds: {})".format(
+            self.query_id, self.evalue, self.bitscore, self.nseeds)
