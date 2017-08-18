@@ -45,7 +45,7 @@ class TestClusterFeature(unittest.TestCase):
                             self.assertEqual(len(value)-2, len(mod_cluster.notes))
                         elif key == 'product':
                             #product is modified to products in secmet
-                            self.assertEqual(bp_cluster.qualifiers['product'], mod_cluster.get_products())
+                            self.assertEqual(value, mod_cluster.get_products())
                         else:
                             self.assertEqual(value, getattr(mod_cluster, key))
         cluster = ClusterFeature(FeatureLocation(100, 1000))

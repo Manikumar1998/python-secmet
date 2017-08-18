@@ -38,7 +38,7 @@ class TestDomains(unittest.TestCase):
                 if value is not None and value:
                     if key == 'note':
                         #note is modified to notes in secmet
-                        self.assertEqual(bp_generic.qualifiers['note'], mod_generic.notes)
+                        self.assertEqual(value, mod_generic.notes)
                     else:
                         self.assertEqual(value, mod_generic.get_qualifier(key))
 
