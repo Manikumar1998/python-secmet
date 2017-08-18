@@ -2,10 +2,18 @@ from os import path
 import unittest
 from Bio import SeqIO
 from Bio.SeqFeature import FeatureLocation, SeqFeature
-from secmet.record import Record, CDSFeature, SecMetQualifier
+from secmet.record import Record, CDSFeature, SecMetQualifier, SecMetResult
 
 filename = 'Y16952.3.final.gbk'
 filetype = 'genbank'
+
+class FakeResult(object):
+    """A FakeResult to test SecMetResult"""
+    def __init__(self):
+        """Initialise members with fake values"""
+        self.query_id = 'fake_id'
+        self.evalue = 'fake_evalue'
+        self.bitscore = 'fake_bitscore'
 
 class TestCDSFeature(unittest.TestCase):
     def get_testfile(self):
@@ -43,9 +51,11 @@ class TestCDSFeature(unittest.TestCase):
                                 if not key in mod_cds._qualifiers:
                                     raise AttributeError('%s is not a member of CDSFeature'%key)
                                 else:
-                                    self.assertEqual(bp_cds.qualifiers[key], mod_cds._qualifiers[key])
+                                    self.assertEqual(value, mod_cds._qualifiers[key])
                             else:
                                 self.assertEqual(str(value[0]), str(getattr(mod_cds, key)))
+                        else:
+                            self.assertEqual(value, mod_cds.sec_met.as_list())
                     else:
                         if key == 'note':
                             #note is modified to notes in secmet
@@ -127,3 +137,20 @@ class TestCDSFeature(unittest.TestCase):
             cds.to_biopython()
         except ValueError:
             pass
+
+    def test_SecMetResult(self):
+        """Test the SecMetResult class"""
+        empty_result = SecMetResult()
+        self.assertEqual(None, empty_result.query_id)
+        self.assertEqual(None, empty_result.evalue)
+        self.assertEqual(None, empty_result.bitscore)
+        self.assertEqual(None, empty_result.nseeds)
+
+        result = SecMetResult(FakeResult(), "fake_seeds")
+        self.assertEqual('fake_id', result.query_id)
+        self.assertEqual('fake_evalue', result.evalue)
+        self.assertEqual('fake_bitscore', result.bitscore)
+        self.assertEqual('fake_seeds', result.nseeds)
+
+        expected = "fake_id (E-value: fake_evalue, bitscore: fake_bitscore, seeds: fake_seeds)"
+        self.assertEqual(expected, repr(result), str(result))
