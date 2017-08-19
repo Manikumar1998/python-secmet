@@ -159,8 +159,12 @@ class GenericFeature(Feature):
 
     def add_qualifier(self, category, info):
         """Adds a qualifier to qualifiers dictionary"""
-        if not isinstance(category, str) or not isinstance(info, (str, list)):
-            raise TypeError("Type of qualifiers should be 'str'")
+        if not isinstance(category, str):
+            if not isinstance(info, (str, list)):
+                if not isinstance(info, (int, float)):
+                    raise TypeError("Qualifier category should be str and value should be str or list or number")
+                else:
+                    info = str(info)
         if category in ['evalue', 'score', 'probability']:
             if not (((info.replace('.', '')).replace('E-', '')).replace('-', '')).replace('+', '').isdigit():
                 raise ValueError('%s should be a number'% category)
