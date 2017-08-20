@@ -237,6 +237,9 @@ class TestRecordMethods(unittest.TestCase):
                 if bp_cluster.location.start <= cds.location.start <= bp_cluster.location.end or \
                    bp_cluster.location.start <= cds.location.end <= bp_cluster.location.end:
                     bp_clustercdsfeatures.append(cds)
+            cluster_cds_features = rec.get_CDSs()+rec.get_clusters()
+            for feature in cluster_cds_features:
+                rec._update_cluster_cds_links(feature)
             self.assertEqual(len(bp_clustercdsfeatures), len(mod_cluster.get_CDSs()))
             for bp_cds, mod_cds in zip(bp_clustercdsfeatures, mod_cluster.get_CDSs()):
                 self.assertEqual(str(bp_cds.location), str(mod_cds.location))
