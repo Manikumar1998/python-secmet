@@ -1202,8 +1202,7 @@ class Record(object):
 
     def from_biopython(self, record):
         """Modifies _modified_features_* list with new Feature instances"""
-        features = record.features
-        for feature in features:
+        for feature in record.features:
             if feature.type == 'CDS':
                 feature = CDSFeature(feature=feature)
                 self._modified_cds.append(feature)
@@ -1224,17 +1223,13 @@ class Record(object):
             else:
                 feature = GenericFeature(feature=feature)
                 self._modified_generic.append(feature)
-        cluster_cds_features = self.get_CDSs() + self.get_clusters()
-        for feature in cluster_cds_features:
-            self._update_cluster_cds_links(feature)
         return self
 
     def _update_cluster_cds_links(self, feature):
-        """Link cluster and their CDS features"""
+        """Link cluster and CDS features"""
         if isinstance(feature, ClusterFeature):
             clustercdsfeatures = []
-            cdss = self.get_CDSs()
-            for cds in cdss:
+            for cds in self.get_CDSs():
                 if feature.location.start <= cds.location.start <= feature.location.end or \
                    feature.location.start <= cds.location.end <= feature.location.end:
                     clustercdsfeatures.append(cds)
