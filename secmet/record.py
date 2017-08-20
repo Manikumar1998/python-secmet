@@ -6,6 +6,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
+from bisect import bisect_left
 
 def cmp_feature_location(a, b):
     "Compare two features by their start/end locations"
@@ -20,56 +21,38 @@ def sort_features(seq_record):
 
 
 def find_new_cluster_pos(clusters, target_cluster):
-    """Binary search for appropriate position in array to add new cluster
+    """Find appropriate position in array to add new cluster using Bisection method
         param clusters: A list of all existing ClusterFeature(s) in the record
         param target_cluster: An instance of ClusterFeature
     """
     if not clusters:
         return 0
-    start = 0
-    end = len(clusters)-1
-    while True:
-        try:
-            #Stopping condition
-            if clusters[start].location.start <= target_cluster.location.start and \
-               clusters[start+1].location.start >= target_cluster.location.start:
-                return start+1
-        except IndexError:
-            return start+1
-        mid = start+((end-start)/2+1)
-        if start == end or mid == start:
-            if target_cluster.location.start < clusters[0].location.start:
-                return 0
-            else:
-                return len(clusters)
-        if clusters[mid].location.start > target_cluster.location.start:
-            end = mid
-        else:
-            start = mid
+    cluster_start_locations = [cluster.location.start for cluster in clusters]
+    return bisect_left(cluster_start_locations, target_cluster.location.start)
+
 
 def find_cluster_of_new_cds(clusters, new_cds):
-    """Binary search to find the corresponding cluster feature of a cds feature
+    """Find the corresponding cluster feature of a cds feature using Bisection method
         param clusters: A list of all existing ClusterFeature(s) in the record
         param new_cds: An instance of CDSFeature
     """
     if not clusters:
         return
-    start = 0
-    end = len(clusters)-1
-    while True:
-        #Stopping condition
-        if clusters[start].location.start <= new_cds.location.start <= clusters[start].location.end or \
-           clusters[start].location.start <= new_cds.location.end <= clusters[start].location.end:
-            clusters[start].cdss.append(new_cds)
-            new_cds.cluster = clusters[start]
-            return
-        mid = start+((end-start)/2+1)
-        if start == end or mid == start:
-            return
-        if clusters[mid].location.start > new_cds.location.start:
-            end = mid
-        else:
-            start = mid
+    if new_cds.location.end < clusters[0].location.start or \
+       new_cds.location.start > clusters[len(clusters)-1].location.end:
+        return
+    else:
+        cluster_starts = [cluster.location.start for cluster in clusters]
+        cluster_ends = [cluster.location.end for cluster in clusters]
+        if bisect_left(cluster_starts, new_cds.location.start)-1 == bisect_left(cluster_ends, new_cds.location.start):
+            index = bisect_left(cluster_ends, new_cds.location.start)
+            clusters[index].cdss.append(new_cds)
+            new_cds.cluster = clusters[index]
+
+        if bisect_left(cluster_starts, new_cds.location.end)-1 == bisect_left(cluster_ends, new_cds.location.end):
+            index = bisect_left(cluster_ends, new_cds.location.end)
+            clusters[index].cdss.append(new_cds)
+            new_cds.cluster = clusters[index]
 
 
 class Feature(object):
@@ -266,6 +249,7 @@ class CDSFeature(Feature):
             """Initialise class members(qualifiers) using SeqFeature object"""
             self._qualifiers = feature.qualifiers
 
+            self.id = feature.id
             if 'sec_met' in self._qualifiers:
                 self.sec_met = self._map_sec_met_list_to_SecMetQualifier(self._qualifiers['sec_met'])
 
