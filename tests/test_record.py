@@ -83,12 +83,12 @@ class TestRecordMethods(unittest.TestCase):
         self.assertNotEqual(rec.get_aSDomains(), [])
         self.assertNotEqual(rec.get_generics(), [])
 
-        rec.set_CDSs([])
-        rec.set_clusters([])
-        rec.set_generics([])
-        rec.set_CDS_motifs([])
-        rec.set_PFAM_domains([])
-        rec.set_aSDomains([])
+        rec.erase_CDSs()
+        rec.erase_clusters()
+        rec.erase_generics()
+        rec.erase_CDS_motifs()
+        rec.erase_PFAM_domains()
+        rec.erase_aSDomains()
 
         self.assertEqual(rec.get_CDSs(), [])
         self.assertEqual(rec.get_clusters(), [])
@@ -255,7 +255,7 @@ class TestRecordMethods(unittest.TestCase):
         rec.add_feature(cds)
         #If no clusters are present None should be returned
         self.assertEqual(cds.get_cluster(), None)
-        rec.set_CDSs([])
+        rec.erase_CDSs()
         rec.add_feature(cluster1)
         rec.add_feature(cluster2)
         rec.add_feature(cluster3)

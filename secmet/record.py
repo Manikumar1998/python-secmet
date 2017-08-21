@@ -1112,44 +1112,44 @@ class Record(object):
     def get_clusters(self):
         """A list of secondary metabolite clusters present in the record"""
         return self._modified_cluster
-    def set_clusters(self, clusters_list):
-        """To set the cluster features of the seq_record"""
-        self._modified_cluster = clusters_list
+    def erase_clusters(self):
+        """Erase all cluster features from the Record"""
+        self._modified_cluster = []
 
     def get_CDSs(self):
         """A list of secondary metabolite CDS features present in the record"""
         return self._modified_cds
-    def set_CDSs(self, cds_list):
-        """To set the CDS features of the seq_record"""
-        self._modified_cds = cds_list
+    def erase_CDSs(self):
+        """Erase all CDS features from the Record"""
+        self._modified_cds = []
 
     def get_CDS_motifs(self):
         """A list of secondary metabolite CDS_motifs present in the record"""
         return self._modified_cds_motif
-    def set_CDS_motifs(self, cds_motif_list):
-        """To set the CDS_motif features of the seq_record"""
-        self._modified_cds_motif = cds_motif_list
+    def erase_CDS_motifs(self):
+        """Erase all CDS_motif features present in the Record"""
+        self._modified_cds_motif = []
 
     def get_PFAM_domains(self):
         """A list of secondary metabolite PFAM_domains present in the record"""
         return self._modified_pfam_domain
-    def set_PFAM_domains(self, pfam_domains_list):
-        """To set the PFAM_domain features of the seq_record"""
-        self._modified_pfam_domain = pfam_domains_list
+    def erase_PFAM_domains(self):
+        """Erase all PFAM_domain features present in the Record"""
+        self._modified_pfam_domain = []
 
     def get_aSDomains(self):
         """A list of secondary metabolite aSDomains present in the record"""
         return self._modified_asdomain
-    def set_aSDomains(self, asdomains_list):
-        """To set the aSDomain features of the seq_record"""
-        self._modified_asdomain = asdomains_list
+    def erase_aSDomains(self):
+        """Erase all aSDomain features present in the Record"""
+        self._modified_asdomain = []
 
     def get_generics(self):
         """A list of secondary metabolite generics present in the record"""
         return self._modified_generic
-    def set_generics(self, generics_list):
-        """To set the generic features of the seq_record"""
-        self._modified_generic = generics_list
+    def erase_generics(self):
+        """Erase all generic features present in the Record"""
+        self._modified_generic = []
 
     def to_biopython(self):
         """Returns a Bio.SeqRecord instance of the record"""
