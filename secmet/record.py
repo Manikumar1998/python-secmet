@@ -957,7 +957,7 @@ class ClusterFeature(Feature):
 
     def get_CDSs(self):
         """Retruns a list of CDSFeature(s) which belong to this cluster"""
-        return self.cdss
+        return tuple(self.cdss)
 
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
@@ -1111,42 +1111,42 @@ class Record(object):
 
     def get_clusters(self):
         """A list of secondary metabolite clusters present in the record"""
-        return self._modified_cluster
+        return tuple(self._modified_cluster)
     def erase_clusters(self):
         """Erase all cluster features from the Record"""
         self._modified_cluster = []
 
     def get_CDSs(self):
         """A list of secondary metabolite CDS features present in the record"""
-        return self._modified_cds
+        return tuple(self._modified_cds)
     def erase_CDSs(self):
         """Erase all CDS features from the Record"""
         self._modified_cds = []
 
     def get_CDS_motifs(self):
         """A list of secondary metabolite CDS_motifs present in the record"""
-        return self._modified_cds_motif
+        return tuple(self._modified_cds_motif)
     def erase_CDS_motifs(self):
         """Erase all CDS_motif features present in the Record"""
         self._modified_cds_motif = []
 
     def get_PFAM_domains(self):
         """A list of secondary metabolite PFAM_domains present in the record"""
-        return self._modified_pfam_domain
+        return tuple(self._modified_pfam_domain)
     def erase_PFAM_domains(self):
         """Erase all PFAM_domain features present in the Record"""
         self._modified_pfam_domain = []
 
     def get_aSDomains(self):
         """A list of secondary metabolite aSDomains present in the record"""
-        return self._modified_asdomain
+        return tuple(self._modified_asdomain)
     def erase_aSDomains(self):
         """Erase all aSDomain features present in the Record"""
         self._modified_asdomain = []
 
     def get_generics(self):
         """A list of secondary metabolite generics present in the record"""
-        return self._modified_generic
+        return tuple(self._modified_generic)
     def erase_generics(self):
         """Erase all generic features present in the Record"""
         self._modified_generic = []
@@ -1154,12 +1154,12 @@ class Record(object):
     def to_biopython(self):
         """Returns a Bio.SeqRecord instance of the record"""
         new_record = self._record
-        features = self.get_generics()[:] #Clone the private list
-        features.extend(self.get_clusters())
-        features.extend(self.get_CDSs())
-        features.extend(self.get_CDS_motifs())
-        features.extend(self.get_aSDomains())
-        features.extend(self.get_PFAM_domains())
+        features = list(self.get_generics())
+        features.extend(list(self.get_clusters()))
+        features.extend(list(self.get_CDSs()))
+        features.extend(list(self.get_CDS_motifs()))
+        features.extend(list(self.get_aSDomains()))
+        features.extend(list(self.get_PFAM_domains()))
         record_features = []
         for feature in features:
             record_features.append(feature.to_biopython()[0])
@@ -1178,7 +1178,7 @@ class Record(object):
         if not isinstance(feature, Feature):
             raise TypeError("The argument is not an instance of 'Feature'")
         if isinstance(feature, ClusterFeature):
-            clusters = self.get_clusters()
+            clusters = self._modified_cluster
             index = find_new_cluster_pos(clusters, feature)
             clusters.insert(index, feature)
             feature.parent_record = self

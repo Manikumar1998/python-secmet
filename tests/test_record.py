@@ -90,11 +90,11 @@ class TestRecordMethods(unittest.TestCase):
         rec.erase_PFAM_domains()
         rec.erase_aSDomains()
 
-        self.assertEqual(rec.get_CDSs(), [])
-        self.assertEqual(rec.get_clusters(), [])
-        self.assertEqual(rec.get_PFAM_domains(), [])
-        self.assertEqual(rec.get_aSDomains(), [])
-        self.assertEqual(rec.get_generics(), [])
+        self.assertEqual(rec.get_CDSs(), ())
+        self.assertEqual(rec.get_clusters(), ())
+        self.assertEqual(rec.get_PFAM_domains(), ())
+        self.assertEqual(rec.get_aSDomains(), ())
+        self.assertEqual(rec.get_generics(), ())
 
     def test_from_biopython(self):
         """Test from_biopython() in Record"""
