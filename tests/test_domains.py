@@ -31,7 +31,7 @@ class TestDomains(unittest.TestCase):
         bp_asdomains = [i for i in bp_rec.features if i.type == 'aSDomain']
         mod_asdomains = rec.get_aSDomains()
         #Segregate out qualifiers that are stored in list form
-        qualifiers_as_list = ['note', 'label', 'specificity', 'aSASF_choice', 'aSASF_note', \
+        qualifiers_as_list = ['note', 'specificity', 'aSASF_choice', 'aSASF_note', \
                               'aSASF_scaffold', 'aSASF_prediction', 'aSProdPred']
         for bp_asdomain, mod_asdomain in zip(bp_asdomains, mod_asdomains):
             for key, value in bp_asdomain.qualifiers.items():
@@ -39,7 +39,10 @@ class TestDomains(unittest.TestCase):
                     if key not in qualifiers_as_list:
                         if not hasattr(mod_asdomain, key):
                             raise AttributeError('%s is not a member of aSDomain'%key)
-                        self.assertEqual(str(value[0]), str(getattr(mod_asdomain, key)))
+                        if key in ['score', 'evalue']:
+                            self.assertEqual(float(value[0]), float(getattr(mod_asdomain, key)))
+                        else:
+                            self.assertEqual(str(value[0]), str(getattr(mod_asdomain, key)))
                     else:
                         if key == 'note':
                             #note is modified to notes in secmet
@@ -72,7 +75,7 @@ class TestDomains(unittest.TestCase):
         self.assertEqual(asdomain_feature.type, 'aSDomain')
         self.assertEqual(asdomain_feature.locus_tag, 'fake_locus_tag')
         self.assertEqual(asdomain_feature.translation, 'fake_translation')
-        self.assertEqual(asdomain_feature.label, ['fake_label'])
+        self.assertEqual(asdomain_feature.label, 'fake_label')
         self.assertEqual(asdomain_feature.detection, 'fake_detection')
         self.assertEqual(asdomain_feature.database, 'fake_database')
         self.assertEqual(asdomain_feature.asDomain_id, 'fake_asDomain_id')
@@ -97,7 +100,7 @@ class TestDomains(unittest.TestCase):
         bp_pfams = [i for i in bp_rec.features if i.type == 'PFAM_domain']
         mod_pfams = rec.get_PFAM_domains()
         #Segregate out qualifiers that are stored in list form
-        qualifiers_as_list = ['note', 'label', 'db_xref', 'aSASF_choice', 'aSASF_note', \
+        qualifiers_as_list = ['note', 'db_xref', 'aSASF_choice', 'aSASF_note', \
                               'aSASF_scaffold', 'aSASF_prediction', 'aSProdPred']
         for bp_pfam, mod_pfam in zip(bp_pfams, mod_pfams):
             for key, value in bp_pfam.qualifiers.items():
@@ -105,7 +108,10 @@ class TestDomains(unittest.TestCase):
                     if key not in qualifiers_as_list:
                         if not hasattr(mod_pfam, key):
                             raise AttributeError('%s is not a member of PFAM_domain'%key)
-                        self.assertEqual(str(value[0]), str(getattr(mod_pfam, key)))
+                        if key in ['score', 'evalue']:
+                            self.assertEqual(float(value[0]), float(getattr(mod_pfam, key)))
+                        else:
+                            self.assertEqual(str(value[0]), str(getattr(mod_pfam, key)))
                     else:
                         if key == 'note':
                             #note is modified to notes in secmet
@@ -139,7 +145,7 @@ class TestDomains(unittest.TestCase):
         self.assertEqual(pfam_feature.type, 'PFAM_domain')
         self.assertEqual(pfam_feature.locus_tag, 'fake_locus_tag')
         self.assertEqual(pfam_feature.translation, 'fake_translation')
-        self.assertEqual(pfam_feature.label, ['fake_label'])
+        self.assertEqual(pfam_feature.label, 'fake_label')
         self.assertEqual(pfam_feature.aSTool, 'fake_aSTool')
         self.assertEqual(pfam_feature.detection, 'fake_detection')
         self.assertEqual(pfam_feature.database, 'fake_database')

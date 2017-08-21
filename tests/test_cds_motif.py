@@ -38,7 +38,11 @@ class TestCDS_motifFeature(unittest.TestCase):
                     if key not in qualifiers_as_list:
                         if not hasattr(mod_motif, key):
                             raise AttributeError("%s is not a member of CDS_motifFeature"%key)
-                        self.assertEqual(str(value[0]), str(getattr(mod_motif, key)))
+                        #score and evalue are numbers
+                        if key in ['score', 'evalue']:
+                            self.assertEqual(float(value[0]), float(getattr(mod_motif, key)))
+                        else:
+                            self.assertEqual(str(value[0]), str(getattr(mod_motif, key)))
                     else:
                         if key == 'note':
                             #note is modified to notes in secmet

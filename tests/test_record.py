@@ -172,7 +172,11 @@ class TestRecordMethods(unittest.TestCase):
             self.assertEqual(b_motif.type, m_motif.type)
             self.assertEqual(str(b_motif.location), str(m_motif.location))
             for key, value in b_motif.qualifiers.items():
-                self.assertEqual(value, m_motif.qualifiers[key])
+                if value:
+                    if key in ['score', 'evalue']:
+                        self.assertEqual(float(value[0]), float(m_motif.qualifiers[key][0]))
+                    else:
+                        self.assertEqual(value, m_motif.qualifiers[key])
 
     def test_get_PFAM_domains(self):
         """Test get_PFAM_domains() in Record"""
@@ -187,8 +191,11 @@ class TestRecordMethods(unittest.TestCase):
             self.assertEqual(b_fam.type, m_fam.type)
             self.assertEqual(str(b_fam.location), str(m_fam.location))
             for key, value in b_fam.qualifiers.items():
-                if value is not None and value:
-                    self.assertEqual(value, m_fam.qualifiers[key])
+                if value:
+                    if key in ['score', 'evalue']:
+                        self.assertEqual(float(value[0]), float(m_fam.qualifiers[key][0]))
+                    else:
+                        self.assertEqual(value, m_fam.qualifiers[key])
 
     def test_get_aSDomains(self):
         """Test get_aSDomains() in Record"""
@@ -203,8 +210,11 @@ class TestRecordMethods(unittest.TestCase):
             self.assertEqual(b_asdomain.type, m_asdomain.type)
             self.assertEqual(str(b_asdomain.location), str(m_asdomain.location))
             for key, value in b_asdomain.qualifiers.items():
-                if value is not None and value:
-                    self.assertEqual(value, m_asdomain.qualifiers[key])
+                if value:
+                    if key in ['score', 'evalue']:
+                        self.assertEqual(float(value[0]), float(m_asdomain.qualifiers[key][0]))
+                    else:
+                        self.assertEqual(value, m_asdomain.qualifiers[key])
 
     def test_get_cluster_number(self):
         """Test get_cluster_number() in Record"""
