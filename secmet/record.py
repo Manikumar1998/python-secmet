@@ -103,37 +103,15 @@ class GenericFeature(Feature):
 
             self.type = feature.type
             self.location = feature.location
-            if 'locus_tag' in self._qualifiers:
-                self.locus_tag = self._qualifiers['locus_tag'][0]
-                del self._qualifiers['locus_tag']
+            self.locus_tag = self._qualifiers.pop('locus_tag', [None])[0]
+            self.gene = self._qualifiers.pop('gene', [None])[0]
+            self.translation = self._qualifiers.pop('translation', [None])[0]
+            self.name = self._qualifiers.pop('name', [None])[0]
+            self.seq = self._qualifiers.pop('seq', [None])[0]
+            self.description = self._qualifiers.pop('description', [None])[0]
+            self.sec_met = self._qualifiers.pop('sec_met', [])
+            self.notes = self._qualifiers.pop('note', [])
 
-            if 'gene' in self._qualifiers:
-                self.gene = self._qualifiers['gene'][0]
-                del self._qualifiers['gene']
-
-            if 'translation' in self._qualifiers:
-                self.translation = self._qualifiers['translation'][0]
-                del self._qualifiers['translation']
-
-            if 'name' in self._qualifiers:
-                self.name = self._qualifiers['name'][0]
-                del self._qualifiers['name']
-
-            if 'seq' in self._qualifiers:
-                self.seq = self._qualifiers['seq'][0]
-                del self._qualifiers['seq']
-
-            if 'description' in self._qualifiers:
-                self.description = self._qualifiers['description'][0]
-                del self._qualifiers['description']
-
-            if 'sec_met' in self._qualifiers:
-                self.sec_met.extend(self._qualifiers['sec_met'])
-                del self._qualifiers['sec_met']
-
-            if 'note' in self._qualifiers:
-                self.notes = self._qualifiers['note']
-                del self._qualifiers['note']
         else:
             self.location = f_location
             if not isinstance(f_type, str):
@@ -245,62 +223,29 @@ class CDSFeature(Feature):
         self.sec_met_predictions = []
         self.type = 'CDS'
 
-        if feature is not None:
+        if feature:
             """Initialise class members(qualifiers) using SeqFeature object"""
             self._qualifiers = feature.qualifiers
-
             self.id = feature.id
+            self.locus_tag = self._qualifiers.pop('locus_tag', [None])[0]
+            self.product = self._qualifiers.pop('product', [None])[0]
+            self.protein_id = self._qualifiers.pop('protein_id', [None])[0]
+            self.gene = self._qualifiers.pop('gene', [None])[0]
+            self.translation = self._qualifiers.pop('translation', [None])[0]
+            self.notes = self._qualifiers.pop('note',[])
+            self.EC_number = self._qualifiers.pop('EC_number', [])
+            self.transl_table = self._qualifiers.pop('transl_table', [None])[0]
+            self.source = self._qualifiers.pop('source', [None])[0]
+            self.aSASF_note = self._qualifiers.pop('aSASF_note', [])
+            self.aSASF_choice = self._qualifiers.pop('aSASF_choice', [])
+            self.aSASF_scaffold = self._qualifiers.pop('aSASF_scaffold', [])
+            self.aSASF_prediction = self._qualifiers.pop('aSASF_prediction', [])
+            self.aSProdPred = self._qualifiers.pop('aSProdPred', [])
+            self.db_xref = self._qualifiers.pop('db_xref', [])
+            self.sec_met_predictions = self._qualifiers.pop('sec_met_predictions', [])
+            self.location = feature.location
             if 'sec_met' in self._qualifiers:
                 self.sec_met = self._map_sec_met_list_to_SecMetQualifier(self._qualifiers['sec_met'])
-
-            if 'locus_tag' in self._qualifiers:
-                self.locus_tag = self._qualifiers['locus_tag'][0]
-
-            if 'product' in self._qualifiers:
-                self.product = self._qualifiers['product'][0]
-
-            if 'protein_id' in self._qualifiers:
-                self.protein_id = self._qualifiers['protein_id'][0]
-
-            if 'gene' in self._qualifiers:
-                self.gene = self._qualifiers['gene'][0]
-
-            if 'translation' in self._qualifiers:
-                self.translation = self._qualifiers['translation'][0]
-
-            if 'note' in self._qualifiers:
-                self.notes = self._qualifiers['note']
-
-            if 'EC_number' in self._qualifiers:
-                self.EC_number = self._qualifiers['EC_number']
-
-            if 'transl_table' in self._qualifiers:
-                self.transl_table = self._qualifiers['transl_table'][0]
-
-            if 'source' in self._qualifiers:
-                self.source = self._qualifiers['source'][0]
-
-            if 'aSASF_choice' in self._qualifiers:
-                self.aSASF_choice = self._qualifiers['aSASF_choice']
-
-            if 'aSASF_note' in self._qualifiers:
-                self.aSASF_note = self._qualifiers['aSASF_note']
-
-            if 'aSASF_prediction' in self._qualifiers:
-                self.aSASF_prediction = self._qualifiers['aSASF_prediction']
-
-            if 'aSASF_scaffold' in self._qualifiers:
-                self.aSASF_scaffold = self._qualifiers['aSASF_scaffold']
-
-            if 'aSProdPred' in self._qualifiers:
-                self.aSProdPred = self._qualifiers['aSProdPred']
-
-            if 'db_xref' in self._qualifiers:
-                self.db_xref = self._qualifiers['db_xref']
-
-            if 'sec_met_predictions' in self._qualifiers:
-                self.sec_met_predictions = self._qualifiers['sec_met_predictions']
-            self.location = feature.location
         else:
             self.location = f_location
 
@@ -364,7 +309,7 @@ class CDSFeature(Feature):
             self._qualifiers['translation'] = [str(self.translation)]
         if self.notes:
             self._qualifiers['note'] = self.notes
-        if self.EC_number is not None:
+        if self.EC_number:
             self._qualifiers['EC_number'] = self.EC_number
         if self.transl_table is not None:
             self._qualifiers['transl_table'] = [str(self.transl_table)]
@@ -392,23 +337,17 @@ class CDSFeature(Feature):
         return repr(self.to_biopython()[0])
 
 
-class CDS_motifFeature(Feature):
-    """A CDS_motifFeature which subclasses Feature"""
-    def __init__(self, f_location=None, feature=None):
-        """Initialise a CDS_motifFeature
-            param f_location: class 'Bio.SeqFeature.FeatureLocation/CompoundLocation'
-            param feature: class 'Bio.SeqFeature.SeqFeature'
-        """
-        super(CDS_motifFeature, self).__init__()
-        self.label = None
-        self.motif = None
+class SubCDSFeature(Feature):
+    """A super class for CDS_motifFeature, PFAM_domain and aSDomain"""
+    def __init__(self, f_location, feature):
+        super(SubCDSFeature, self).__init__()
         self.asDomain_id = None
         self.aSTool = None
         self.detection = None
         self.database = None
         self.translation = None
         self.locus_tag = None
-        self.type = 'CDS_motif'
+        self.label = None
         self.aSProdPred = []
         self.aSASF_choice = []
         self.aSASF_note = []
@@ -416,61 +355,30 @@ class CDS_motifFeature(Feature):
         self.aSASF_scaffold = []
         self._qualifiers = {}
 
-        if feature is not None:
-            """Initialise class members(qualifiers) using SeqFeature object"""
+        if feature:
             self._qualifiers = feature.qualifiers
-
-            if 'locus_tag' in self._qualifiers:
-                self.locus_tag = self._qualifiers['locus_tag'][0]
-
-            if 'translation' in self._qualifiers:
-                self.translation = self._qualifiers['translation'][0]
-
-            if 'label' in self._qualifiers:
-                self.label = self._qualifiers['label'][0]
-
-            if 'motif' in self._qualifiers:
-                self.motif = self._qualifiers['motif'][0]
-
-            if 'asDomain_id' in self._qualifiers:
-                self.asDomain_id = self._qualifiers['asDomain_id'][0]
-
-            if 'evalue' in self._qualifiers:
-                self.evalue = self._qualifiers['evalue'][0]
-
+            self.locus_tag = self._qualifiers.pop('locus_tag', [None])[0]
+            self.translation = self._qualifiers.pop('translation', [None])[0]
+            self.asDomain_id = self._qualifiers.pop('asDomain_id', [None])[0]
+            self.aSTool = self._qualifiers.pop('aSTool', [None])[0]
+            self.detection = self._qualifiers.pop('detection', [None])[0]
+            self.database = self._qualifiers.pop('database', [None])[0]
+            self.label = self._qualifiers.pop('label', [None])[0]
+            self.aSASF_note = self._qualifiers.pop('aSASF_note', [])
+            self.aSASF_choice = self._qualifiers.pop('aSASF_choice', [])
+            self.aSASF_scaffold = self._qualifiers.pop('aSASF_scaffold', [])
+            self.aSASF_prediction = self._qualifiers.pop('aSASF_prediction', [])
+            self.aSProdPred = self._qualifiers.pop('aSProdPred', [])
+            self.notes = self._qualifiers.pop('note', [])
+            self.location = feature.location
             if 'score' in self._qualifiers:
                 self.score = self._qualifiers['score'][0]
-
-            if 'aSTool' in self._qualifiers:
-                self.aSTool = self._qualifiers['aSTool'][0]
-
-            if 'detection' in self._qualifiers:
-                self.detection = self._qualifiers['detection'][0]
-
-            if 'database' in self._qualifiers:
-                self.database = self._qualifiers['database'][0]
-
-            if 'aSASF_choice' in self._qualifiers:
-                self.aSASF_choice = self._qualifiers['aSASF_choice']
-
-            if 'aSASF_note' in self._qualifiers:
-                self.aSASF_note = self._qualifiers['aSASF_note']
-
-            if 'aSASF_prediction' in self._qualifiers:
-                self.aSASF_prediction = self._qualifiers['aSASF_prediction']
-
-            if 'aSASF_scaffold' in self._qualifiers:
-                self.aSASF_scaffold = self._qualifiers['aSASF_scaffold']
-
-            if 'aSProdPred' in self._qualifiers:
-                self.aSProdPred = self._qualifiers['aSProdPred']
-
-            if 'note' in self._qualifiers:
-                self.notes = self._qualifiers['note']
-            self.location = feature.location
+                del self._qualifiers['score']
+            if 'evalue' in self._qualifiers:
+                self.evalue = self._qualifiers['evalue'][0]
+                del self._qualifiers['evalue']
         else:
             self.location = f_location
-
     #Check for a valid score qualifier before assigning
     def _get_score(self):
         try:
@@ -478,9 +386,10 @@ class CDS_motifFeature(Feature):
         except:
             return None
     def _set_score(self, value):
-        if not (((value.replace('.', '')).replace('-', ''))).replace('+', '').isdigit():
-            raise ValueError("score must be a number")
-        self.__score = value
+        try:
+            self.__score = float(value)
+        except ValueError:
+            raise ValueError('Invalid score value')
     score = property(_get_score, _set_score)
 
     #Check for a valid evalue qualifier before assigning
@@ -490,33 +399,30 @@ class CDS_motifFeature(Feature):
         except:
             return None
     def _set_evalue(self, value):
-        if not ((value.replace('.', '')).replace('E-', '').replace('E+', '')).isdigit():
-            raise ValueError("evalue must be an number")
-        self.__evalue = value
+        try:
+            self.__evalue = float(value)
+        except ValueError:
+            raise ValueError('Invalid evalue value')
     evalue = property(_get_evalue, _set_evalue)
 
-    def to_biopython(self):
-        """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
-        new_CDS_motif = SeqFeature(self.location, type=self.type)
-        if self.locus_tag is not None:
+    def _get_feature_qualifiers(self):
+        if self.locus_tag:
             self._qualifiers['locus_tag'] = [str(self.locus_tag)]
-        if self.translation is not None:
+        if self.translation:
             self._qualifiers['translation'] = [str(self.translation)]
-        if self.label is not None:
-            self._qualifiers['label'] = [str(self.label)]
-        if self.motif is not None:
-            self._qualifiers['motif'] = [str(self.motif)]
-        if self.database is not None:
+        if self.database:
             self._qualifiers['database'] = [str(self.database)]
-        if self.evalue is not None:
+        if self.evalue:
             self._qualifiers['evalue'] = [str(self.evalue)]
-        if self.asDomain_id is not None:
+        if self.asDomain_id:
             self._qualifiers['asDomain_id'] = [str(self.asDomain_id)]
-        if self.detection is not None:
+        if self.detection:
             self._qualifiers['detection'] = [str(self.detection)]
-        if self.score is not None:
+        if self.score:
             self._qualifiers['score'] = [str(self.score)]
-        if self.aSTool is not None:
+        if self.label:
+            self._qualifiers['label'] = [str(self.label)]
+        if self.aSTool:
             self._qualifiers['aSTool'] = [str(self.aSTool)]
         if self.aSASF_choice:
             self._qualifiers['aSASF_choice'] = self.aSASF_choice
@@ -530,6 +436,29 @@ class CDS_motifFeature(Feature):
             self._qualifiers['aSProdPred'] = self.aSProdPred
         if self.notes:
             self._qualifiers['note'] = self.notes
+        return self._qualifiers
+
+class CDS_motifFeature(SubCDSFeature):
+    """A CDS_motifFeature which subclasses Feature"""
+    def __init__(self, f_location=None, feature=None):
+        """Initialise a CDS_motifFeature
+            param f_location: class 'Bio.SeqFeature.FeatureLocation/CompoundLocation'
+            param feature: class 'Bio.SeqFeature.SeqFeature'
+        """
+        super(CDS_motifFeature, self).__init__(f_location, feature)
+        self.motif = None
+        self.type = 'CDS_motif'
+
+        if feature:
+            """Initialise class members(qualifiers) using SeqFeature object"""
+            self.motif = feature.qualifiers.pop('motif', [None])[0]
+
+    def to_biopython(self):
+        """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
+        new_CDS_motif = SeqFeature(self.location, type=self.type)
+        self._qualifiers = self._get_feature_qualifiers()
+        if self.motif:
+            self._qualifiers['motif'] = [str(self.motif)]
         new_CDS_motif.qualifiers = self._qualifiers.copy()
         return [new_CDS_motif]
 
@@ -538,156 +467,35 @@ class CDS_motifFeature(Feature):
         return repr(self.to_biopython()[0])
 
 
-class PFAM_domain(Feature):
+class PFAM_domain(SubCDSFeature):
     """A PHAM_domain feature which subclasses Feature"""
     def __init__(self, f_location=None, feature=None):
         """Initialise a ClusterFeature
             param f_location: class 'Bio.SeqFeature.FeatureLocation/CompoundLocation'
             param feature: class 'Bio.SeqFeature.SeqFeature'
         """
-        super(PFAM_domain, self).__init__()
+        super(PFAM_domain, self).__init__(f_location, feature)
         self.domain = None
-        self.asDomain_id = None
-        self.locus_tag = None
-        self.aSTool = None
-        self.detection = None
-        self.database = None
-        self.translation = None
         self.description = None
         self.db_xref = []
-        self.label = []
-        self.aSProdPred = []
-        self.aSASF_choice = []
-        self.aSASF_note = []
-        self.aSASF_prediction = []
-        self.aSASF_scaffold = []
         self.type = 'PFAM_domain'
-        self._qualifiers = {}
 
-        if feature is not None:
+        if feature:
             """Initialise class members(qualifiers) using SeqFeature object"""
-            self._qualifiers = feature.qualifiers
-
-            if 'locus_tag' in self._qualifiers:
-                self.locus_tag = self._qualifiers['locus_tag'][0]
-
-            if 'domain' in self._qualifiers:
-                self.domain = self._qualifiers['domain'][0]
-
-            if 'translation' in self._qualifiers:
-                self.translation = self._qualifiers['translation'][0]
-
-            if 'label' in self._qualifiers:
-                self.label = self._qualifiers['label']
-
-            if 'asDomain_id' in self._qualifiers:
-                self.asDomain_id = self._qualifiers['asDomain_id'][0]
-
-            if 'evalue' in self._qualifiers:
-                self.evalue = self._qualifiers['evalue'][0]
-
-            if 'score' in self._qualifiers:
-                self.score = self._qualifiers['score'][0]
-
-            if 'aSTool' in self._qualifiers:
-                self.aSTool = self._qualifiers['aSTool'][0]
-
-            if 'detection' in self._qualifiers:
-                self.detection = self._qualifiers['detection'][0]
-
-            if 'database' in self._qualifiers:
-                self.database = self._qualifiers['database'][0]
-
-            if 'db_xref' in self._qualifiers:
-                self.db_xref = self._qualifiers['db_xref']
-
-            if 'description' in self._qualifiers:
-                self.description = self._qualifiers['description'][0]
-
-            if 'aSASF_choice' in self._qualifiers:
-                self.aSASF_choice = self._qualifiers['aSASF_choice']
-
-            if 'aSASF_note' in self._qualifiers:
-                self.aSASF_note = self._qualifiers['aSASF_note']
-
-            if 'aSASF_prediction' in self._qualifiers:
-                self.aSASF_prediction = self._qualifiers['aSASF_prediction']
-
-            if 'aSASF_scaffold' in self._qualifiers:
-                self.aSASF_scaffold = self._qualifiers['aSASF_scaffold']
-
-            if 'aSProdPred' in self._qualifiers:
-                self.aSProdPred = self._qualifiers['aSProdPred']
-
-            if 'note' in self._qualifiers:
-                self.notes = self._qualifiers['note']
-            self.location = feature.location
-        else:
-            self.location = f_location
-
-    #Check for a valid score qualifier before assigning
-    def _get_score(self):
-        try:
-            return self.__score
-        except:
-            return None
-    def _set_score(self, value):
-        if not ((value.replace('.', '')).replace('-', '')).isdigit():
-            raise ValueError("score must be a number")
-        self.__score = value
-    score = property(_get_score, _set_score)
-
-    #Check for a valid evalue qualifier before assigning
-    def _get_evalue(self):
-        try:
-            return self.__evalue
-        except:
-            return None
-    def _set_evalue(self, value):
-        if not ((value.replace('.', '')).replace('E-', '').replace('E+', '')).isdigit():
-            raise ValueError("evalue must be an number")
-        self.__evalue = value
-    evalue = property(_get_evalue, _set_evalue)
+            self.domain = feature.qualifiers.pop('domain', [None])[0]
+            self.description = feature.qualifiers.pop('description', [None])[0]
+            self.db_xref = feature.qualifiers.pop('db_xref', [])
 
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
         new_PFAM_domain = SeqFeature(self.location, type=self.type)
-        if self.locus_tag is not None:
-            self._qualifiers['locus_tag'] = [str(self.locus_tag)]
-        if self.translation is not None:
-            self._qualifiers['translation'] = [str(self.translation)]
-        if self.label is not None:
-            self._qualifiers['label'] = self.label
-        if self.database is not None:
-            self._qualifiers['database'] = [str(self.database)]
-        if self.evalue is not None:
-            self._qualifiers['evalue'] = [str(self.evalue)]
-        if self.asDomain_id is not None:
-            self._qualifiers['asDomain_id'] = [str(self.asDomain_id)]
-        if self.detection is not None:
-            self._qualifiers['detection'] = [str(self.detection)]
-        if self.score is not None:
-            self._qualifiers['score'] = [str(self.score)]
-        if self.aSTool is not None:
-            self._qualifiers['aSTool'] = [str(self.aSTool)]
-        if self.domain is not None:
+        self._qualifiers = self._get_feature_qualifiers()
+        if self.domain:
             self._qualifiers['domain'] = [str(self.domain)]
-        if self.description is not None:
+        if self.description:
             self._qualifiers['description'] = [str(self.description)]
-        if self.db_xref is not None:
+        if self.db_xref:
             self._qualifiers['db_xref'] = self.db_xref
-        if self.aSASF_choice:
-            self._qualifiers['aSASF_choice'] = self.aSASF_choice
-        if self.aSASF_note:
-            self._qualifiers['aSASF_note'] = self.aSASF_note
-        if self.aSASF_prediction:
-            self._qualifiers['aSASF_prediction'] = self.aSASF_prediction
-        if self.aSASF_scaffold:
-            self._qualifiers['aSASF_scaffold'] = self.aSASF_scaffold
-        if self.aSProdPred:
-            self._qualifiers['aSProdPred'] = self.aSProdPred
-        if self.notes:
-            self._qualifiers['note'] = self.notes
         new_PFAM_domain.qualifiers = self._qualifiers.copy()
         return [new_PFAM_domain]
 
@@ -696,148 +504,33 @@ class PFAM_domain(Feature):
         return repr(self.to_biopython()[0])
 
 
-class aSDomain(Feature):
+class aSDomain(SubCDSFeature):
     """A aSDomain feature which subclasses Feature"""
     def __init__(self, f_location=None, feature=None):
         """Initialise a ClusterFeature
             param f_location: class 'Bio.SeqFeature.FeatureLocation/CompoundLocation'
             param feature: class 'Bio.SeqFeature.SeqFeature'
         """
-        super(aSDomain, self).__init__()
+        super(aSDomain, self).__init__(f_location, feature)
         self.domain = None
         self.domain_subtype = None
-        self.asDomain_id = None
-        self.locus_tag = None
-        self.detection = None
-        self.database = None
-        self.translation = None
-        self.label = []
         self.specificity = []
-        self.aSProdPred = []
-        self.aSASF_choice = []
-        self.aSASF_note = []
-        self.aSASF_prediction = []
-        self.aSASF_scaffold = []
         self.type = 'aSDomain'
-        self._qualifiers = {}
 
-        if feature is not None:
+        if feature:
             """Initialise class members(qualifiers) using SeqFeature object"""
-            self._qualifiers = feature.qualifiers
-
-            if 'locus_tag' in self._qualifiers:
-                self.locus_tag = self._qualifiers['locus_tag'][0]
-
-            if 'domain' in self._qualifiers:
-                self.domain = self._qualifiers['domain'][0]
-
-            if 'domain_subtype' in self._qualifiers:
-                self.domain_subtype = self._qualifiers['domain_subtype'][0]
-
-            if 'translation' in self._qualifiers:
-                self.translation = self._qualifiers['translation'][0]
-
-            if 'label' in self._qualifiers:
-                self.label = self._qualifiers['label']
-
-            if 'asDomain_id' in self._qualifiers:
-                self.asDomain_id = self._qualifiers['asDomain_id'][0]
-
-            if 'evalue' in self._qualifiers:
-                self.evalue = self._qualifiers['evalue'][0]
-
-            if 'score' in self._qualifiers:
-                self.score = self._qualifiers['score'][0]
-
-            if 'detection' in self._qualifiers:
-                self.detection = self._qualifiers['detection'][0]
-
-            if 'database' in self._qualifiers:
-                self.database = self._qualifiers['database'][0]
-
-            if 'note' in self._qualifiers:
-                self.notes = self._qualifiers['note']
-
-            if 'aSASF_choice' in self._qualifiers:
-                self.aSASF_choice = self._qualifiers['aSASF_choice']
-
-            if 'aSASF_note' in self._qualifiers:
-                self.aSASF_note = self._qualifiers['aSASF_note']
-
-            if 'aSASF_prediction' in self._qualifiers:
-                self.aSASF_prediction = self._qualifiers['aSASF_prediction']
-
-            if 'aSASF_scaffold' in self._qualifiers:
-                self.aSASF_scaffold = self._qualifiers['aSASF_scaffold']
-
-            if 'aSProdPred' in self._qualifiers:
-                self.aSProdPred = self._qualifiers['aSProdPred']
-
-            if 'specificity' in self._qualifiers:
-                self.specificity = self._qualifiers['specificity']
-            self.location = feature.location
-        else:
-            self.location = f_location
-
-    #Check for a valid score qualifier before assigning
-    def _get_score(self):
-        try:
-            return self.__score
-        except:
-            return None
-    def _set_score(self, value):
-        if not ((value.replace('.', '')).replace('-', '')).isdigit():
-            raise ValueError("score must be a number")
-        self.__score = value
-    score = property(_get_score, _set_score)
-
-    #Check for a valid evalue qualifier before assigning
-    def _get_evalue(self):
-        try:
-            return self.__evalue
-        except:
-            return None
-    def _set_evalue(self, value):
-        if not ((value.replace('.', '')).replace('E-', '').replace('E+', '')).isdigit():
-            raise ValueError("evalue must be an number")
-        self.__evalue = value
-    evalue = property(_get_evalue, _set_evalue)
+            self.domain = feature.qualifiers.pop('domain', [None])[0]
+            self.domain_subtype = feature.qualifiers.pop('domain_subtype', [None])[0]
+            self.specificity = feature.qualifiers.pop('specificity', [])
 
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
         new_aSDomain = SeqFeature(self.location, type=self.type)
-        if self.locus_tag is not None:
-            self._qualifiers['locus_tag'] = [str(self.locus_tag)]
-        if self.translation is not None:
-            self._qualifiers['translation'] = [str(self.translation)]
-        if self.label is not None:
-            self._qualifiers['label'] = self.label
-        if self.database is not None:
-            self._qualifiers['database'] = [str(self.database)]
-        if self.evalue is not None:
-            self._qualifiers['evalue'] = [str(self.evalue)]
-        if self.asDomain_id is not None:
-            self._qualifiers['asDomain_id'] = [str(self.asDomain_id)]
-        if self.detection is not None:
-            self._qualifiers['detection'] = [str(self.detection)]
-        if self.score is not None:
-            self._qualifiers['score'] = [str(self.score)]
-        if self.domain_subtype is not None:
-            self._qualifiers['domain_subtype'] = [str(self.domain_subtype)]
-        if self.domain is not None:
+        self._qualifiers = self._get_feature_qualifiers()
+        if self.domain:
             self._qualifiers['domain'] = [str(self.domain)]
-        if self.aSASF_choice:
-            self._qualifiers['aSASF_choice'] = self.aSASF_choice
-        if self.aSASF_note:
-            self._qualifiers['aSASF_note'] = self.aSASF_note
-        if self.aSASF_prediction:
-            self._qualifiers['aSASF_prediction'] = self.aSASF_prediction
-        if self.aSASF_scaffold:
-            self._qualifiers['aSASF_scaffold'] = self.aSASF_scaffold
-        if self.aSProdPred:
-            self._qualifiers['aSProdPred'] = self.aSProdPred
-        if self.notes:
-            self._qualifiers['note'] = self.notes
+        if self.domain_subtype:
+            self._qualifiers['domain_subtype'] = [str(self.domain_subtype)]
         if self.specificity:
             self._qualifiers['specificity'] = self.specificity
         new_aSDomain.qualifiers = self._qualifiers.copy()
