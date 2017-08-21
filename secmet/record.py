@@ -97,10 +97,9 @@ class GenericFeature(Feature):
         self.description = None
         self.sec_met = []
 
-        if feature is not None:
+        if feature:
             """Initialise class members(qualifiers) using SeqFeature object"""
             self._qualifiers = feature.qualifiers
-
             self.type = feature.type
             self.location = feature.location
             self.locus_tag = self._qualifiers.pop('locus_tag', [None])[0]
@@ -111,7 +110,6 @@ class GenericFeature(Feature):
             self.description = self._qualifiers.pop('description', [None])[0]
             self.sec_met = self._qualifiers.pop('sec_met', [])
             self.notes = self._qualifiers.pop('note', [])
-
         else:
             self.location = f_location
             if not isinstance(f_type, str):
@@ -167,17 +165,17 @@ class GenericFeature(Feature):
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature of given type of feature"""
         new_Generic = SeqFeature(self.location, type=self.type)
-        if self.locus_tag is not None:
+        if self.locus_tag:
             new_Generic.qualifiers['locus_tag'] = [str(self.locus_tag)]
-        if self.translation is not None:
+        if self.translation:
             new_Generic.qualifiers['translation'] = [str(self.translation)]
-        if self.gene is not None:
+        if self.gene:
             new_Generic.qualifiers['gene'] = [str(self.gene)]
-        if self.name is not None:
+        if self.name:
             new_Generic.qualifiers['name'] = [str(self.name)]
-        if self.seq is not None:
+        if self.seq:
             new_Generic.qualifiers['seq'] = [str(self.seq)]
-        if self.description is not None:
+        if self.description:
             new_Generic.qualifiers['description'] = [str(self.description)]
         if self.sec_met:
             new_Generic.qualifiers['sec_met'] = self.sec_met
@@ -297,23 +295,23 @@ class CDSFeature(Feature):
         if not isinstance(self.sec_met, SecMetQualifier):
             raise ValueError('Invalid sec_met type')
         self._qualifiers['sec_met'] = self.sec_met.as_list()
-        if self.locus_tag is not None:
+        if self.locus_tag:
             self._qualifiers['locus_tag'] = [str(self.locus_tag)]
-        if self.product is not None:
+        if self.product:
             self._qualifiers['product'] = [str(self.product)]
-        if self.protein_id is not None:
+        if self.protein_id:
             self._qualifiers['protein_id'] = [str(self.protein_id)]
-        if self.gene is not None:
+        if self.gene:
             self._qualifiers['gene'] = [str(self.gene)]
-        if self.translation is not None:
+        if self.translation:
             self._qualifiers['translation'] = [str(self.translation)]
         if self.notes:
             self._qualifiers['note'] = self.notes
         if self.EC_number:
             self._qualifiers['EC_number'] = self.EC_number
-        if self.transl_table is not None:
+        if self.transl_table:
             self._qualifiers['transl_table'] = [str(self.transl_table)]
-        if self.source is not None:
+        if self.source:
             self._qualifiers['source'] = [str(self.source)]
         if self.db_xref:
             self._qualifiers['db_xref'] = self.db_xref
@@ -656,27 +654,27 @@ class ClusterFeature(Feature):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
         new_Cluster = SeqFeature(self.location, type=self.type)
         self._qualifiers['note'] = ["Cluster number: " + str(self.get_cluster_number())]
-        if self.detection is not None:
+        if self.detection:
             self._qualifiers['note'].append(self.detection)
         if self.notes:
             self._qualifiers['note'].extend(self.notes)
-        if self.cutoff is not None:
+        if self.cutoff:
             self._qualifiers['cutoff'] = [str(self.cutoff)]
-        if self.extension is not None:
+        if self.extension:
             self._qualifiers['extension'] = [str(self.extension)]
         if self.products:
             self._qualifiers['product'] = self.products
-        if self.contig_edge is not None:
+        if self.contig_edge:
             self._qualifiers['contig_edge'] = [str(self.contig_edge)]
-        if self.structure is not None:
+        if self.structure:
             self._qualifiers['structure'] = [str(self.structure)]
-        if self.probability is not None:
+        if self.probability:
             self._qualifiers['probability'] = [str(self.probability)]
-        if self.subclusterblast is not None:
+        if self.subclusterblast:
             self._qualifiers['subclusterblast'] = self.subclusterblast
-        if self.knownclusterblast is not None:
+        if self.knownclusterblast:
             self._qualifiers['knownclusterblast'] = self.knownclusterblast
-        if self.clusterblast is not None:
+        if self.clusterblast:
             self._qualifiers['clusterblast'] = self.clusterblast
         new_Cluster.qualifiers = self._qualifiers.copy()
         return [new_Cluster]
@@ -703,7 +701,7 @@ class Record(object):
         self._modified_asdomain = []    #A list containing instances of aSDomain
         self._cluster_number_dict = {}  #A dictionary to map clusters and their numbers
 
-        if self._record is not None:
+        if self._record:
             if not isinstance(self._record, SeqRecord):
                 raise ValueError("SeqRecord should be an instance of 'Bio.SeqRecord.SeqRecord'")
             self.from_biopython(self._record)
@@ -732,7 +730,7 @@ class Record(object):
     @property
     def id(self):
         """Pass through to seq_record object if available"""
-        if self._record is not None:
+        if self._record:
             return self._record.id
         else:
             return "NO_ID_ASSIGNED"
@@ -746,7 +744,7 @@ class Record(object):
     @property
     def seq(self):
         """Pass through to seq_record object if available"""
-        if self._record is not None:
+        if self._record:
             return self._record.seq
         else:
             return None
@@ -760,7 +758,7 @@ class Record(object):
     @property
     def description(self):
         """Pass through to seq_record object if available"""
-        if self._record is not None:
+        if self._record:
             return self._record.description
         else:
             return ""
@@ -774,7 +772,7 @@ class Record(object):
     @property
     def name(self):
         """Pass through to seq_record object if available"""
-        if self._record is not None:
+        if self._record:
             return self._record.name
         else:
             return "NO_NAME_ASSIGNED"
@@ -788,7 +786,7 @@ class Record(object):
     @property
     def annotations(self):
         """Pass through to seq_record object if available"""
-        if self._record is not None:
+        if self._record:
             return self._record.annotations
         else:
             return {}
@@ -942,11 +940,11 @@ class SecMetQualifier(list):
             :param domains: a list of SecMetResult instance(s)
             :param kind: an instance of str
         """
-        if clustertype is not None and not isinstance(clustertype, str):
+        if clustertype and not isinstance(clustertype, str):
             raise TypeError('clustertype should be an instance of str')
-        if domains is not None and not isinstance(domains, list):
+        if domains and not isinstance(domains, list):
             raise TypeError('domains should be an instance of list')
-        if kind is not None and not isinstance(kind, str):
+        if kind and not isinstance(kind, str):
             raise TypeError('kind should be an instance of str')
         self.clustertype = clustertype
         self.domains = domains
@@ -958,11 +956,11 @@ class SecMetQualifier(list):
     def __len__(self):
         """Return length of the secmet qualifier"""
         count = 0
-        if self.clustertype is not None:
+        if self.clustertype:
             count += 1
-        if self.domains is not None:
+        if self.domains:
             count += 1
-        if self.kind is not None:
+        if self.kind:
             count += 1
         if self.nrpspks:
             count += len(self.nrpspks)
@@ -975,11 +973,11 @@ class SecMetQualifier(list):
         return str(self.as_list())
 
     def __iter__(self):
-        if self.clustertype is not None:
+        if self.clustertype:
             yield "Type: %s" % self.clustertype
-        if self.domains is not None:
+        if self.domains:
             yield "Domains detected: " + "; ".join(map(str, self.domains))
-        if self.kind is not None:
+        if self.kind:
             yield "Kind: %s" % self.kind
         if self.nrpspks:
             for nrps in self.nrpspks:
@@ -1001,7 +999,7 @@ class SecMetResult():
         self.evalue = None
         self.bitscore = None
         self.nseeds = None
-        if res is not None and nseeds is not None:
+        if res and nseeds:
             self.query_id = res.query_id
             self.evalue = res.evalue
             self.bitscore = res.bitscore

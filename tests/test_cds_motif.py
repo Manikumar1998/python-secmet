@@ -34,7 +34,7 @@ class TestCDS_motifFeature(unittest.TestCase):
                               'aSASF_prediction', 'aSProdPred']
         for bp_motif, mod_motif in zip(bp_cds_motifs, mod_cds_motifs):
             for key, value in bp_motif.qualifiers.items():
-                if value is not None and value:
+                if value:
                     if key not in qualifiers_as_list:
                         if not hasattr(mod_motif, key):
                             raise AttributeError("%s is not a member of CDS_motifFeature"%key)

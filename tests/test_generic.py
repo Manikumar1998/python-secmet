@@ -35,7 +35,7 @@ class TestDomains(unittest.TestCase):
         self.assertEqual(len(bp_generics), len(mod_generics))
         for bp_generic, mod_generic in zip(bp_generics, mod_generics):
             for key, value in bp_generic.qualifiers.items():
-                if value is not None and value:
+                if value:
                     if key == 'note':
                         #note is modified to notes in secmet
                         self.assertEqual(value, mod_generic.notes)

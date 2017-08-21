@@ -33,7 +33,7 @@ class TestClusterFeature(unittest.TestCase):
                               'knownclusterblast']
         for bp_cluster, mod_cluster in zip(bp_clusters, mod_clusters):
             for key, value in bp_cluster.qualifiers.items():
-                if value is not None and value:
+                if value:
                     #clusterblast, subclusterblast and knownclusterblast are lists
                     if key not in qualifiers_as_list:
                         if not hasattr(mod_cluster, key):

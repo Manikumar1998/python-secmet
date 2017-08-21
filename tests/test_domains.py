@@ -35,7 +35,7 @@ class TestDomains(unittest.TestCase):
                               'aSASF_scaffold', 'aSASF_prediction', 'aSProdPred']
         for bp_asdomain, mod_asdomain in zip(bp_asdomains, mod_asdomains):
             for key, value in bp_asdomain.qualifiers.items():
-                if value is not None and value:
+                if value:
                     if key not in qualifiers_as_list:
                         if not hasattr(mod_asdomain, key):
                             raise AttributeError('%s is not a member of aSDomain'%key)
@@ -104,7 +104,7 @@ class TestDomains(unittest.TestCase):
                               'aSASF_scaffold', 'aSASF_prediction', 'aSProdPred']
         for bp_pfam, mod_pfam in zip(bp_pfams, mod_pfams):
             for key, value in bp_pfam.qualifiers.items():
-                if value is not None and value:
+                if value:
                     if key not in qualifiers_as_list:
                         if not hasattr(mod_pfam, key):
                             raise AttributeError('%s is not a member of PFAM_domain'%key)

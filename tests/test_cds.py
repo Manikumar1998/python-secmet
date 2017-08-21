@@ -44,7 +44,7 @@ class TestCDSFeature(unittest.TestCase):
                               'aSASF_note', 'aSASF_scaffold', 'sec_met_predictions', 'EC_number']
         for bp_cds, mod_cds in zip(bp_cdss, mod_cdss):
             for key, value in bp_cds.qualifiers.items():
-                if value is not None and value:
+                if value:
                     if key not in qualifiers_as_list:
                         if key != 'sec_met':    #antiSMASH anyways erases all sec_met qualifiers
                             if not hasattr(mod_cds, key):
