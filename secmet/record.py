@@ -295,7 +295,7 @@ class CDSFeature(Feature):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
         new_CDS = SeqFeature(self.location, type=self.type, id=self.id)
         if not isinstance(self.sec_met, SecMetQualifier):
-            raise ValueError('Invalid sec_met type')
+            raise TypeError('Invalid sec_met type')
         self._qualifiers['sec_met'] = self.sec_met.as_list()
         if self.locus_tag:
             self._qualifiers['locus_tag'] = [str(self.locus_tag)]
@@ -977,17 +977,41 @@ class SecMetQualifier(list):
             self._sec_met.append(qual)
         return self._sec_met
 
-class SecMetResult():
+class SecMetResult(object):
     def __init__(self, res=None, nseeds=None):
         self.query_id = None
-        self.evalue = None
-        self.bitscore = None
         self.nseeds = None
         if res and nseeds:
             self.query_id = res.query_id
             self.evalue = res.evalue
             self.bitscore = res.bitscore
             self.nseeds = nseeds
+
+    #Check for a valid bitscore qualifier before assigning
+    def _get_bitscore(self):
+        try:
+            return self.__bitscore
+        except:
+            return None
+    def _set_bitscore(self, value):
+        try:
+            self.__bitscore = float(value)
+        except ValueError:
+            raise ValueError('bitscore should be a number')
+    bitscore = property(_get_bitscore, _set_bitscore)
+
+    #Check for a valid evalue qualifier before assigning
+    def _get_evalue(self):
+        try:
+            return self.__evalue
+        except:
+            return None
+    def _set_evalue(self, value):
+        try:
+            self.__evalue = float(value)
+        except ValueError:
+            raise ValueError('evalue should be a number')
+    evalue = property(_get_evalue, _set_evalue)
 
     def __repr__(self):
         return self.__str__()
