@@ -45,21 +45,15 @@ class TestDomains(unittest.TestCase):
     def test_add_qualifier(self):
         """Test adding a new GenericFeature"""
         #GenericFeature should be initialised with valid location and type
-        try:
+        with self.assertRaises(TypeError):
             new_generic = GenericFeature()
-        except TypeError:
-            pass
-        try:
+        with self.assertRaises(ValueError):
             new_generic = GenericFeature(FeatureLocation(10, 100), 20) #Invalid type
-        except ValueError:
-            pass
         new_generic = GenericFeature(FeatureLocation(1, 100), 'FAKE')
 
         #qualifiers should be strings and their values should be either strings or list of strings
-        try:
+        with self.assertRaises(TypeError):
             new_generic.add_qualifier(10, (20, 30))
-        except TypeError:
-            pass
 
         #If the formats are valid shouldn't get any error
         try:
@@ -68,19 +62,12 @@ class TestDomains(unittest.TestCase):
         except:
             raise RuntimeError('Secmet unable to add valid qualifiers')
 
-        #score, evalue and probability should be numbers
-        try:
+        with self.assertRaises(ValueError):
             new_generic.add_qualifier('score', '-a50')
-        except ValueError:
-            pass
-        try:
+        with self.assertRaises(ValueError):
             new_generic.add_qualifier('evalue', 'a5.50E-08')
-        except ValueError:
-            pass
-        try:
+        with self.assertRaises(ValueError):
             new_generic.add_qualifier('probability', 'a0.5')
-        except ValueError:
-            pass
 
         #If valid qualifiers and values are added, We shouldn't get an error
         try:

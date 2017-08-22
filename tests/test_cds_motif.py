@@ -51,14 +51,10 @@ class TestCDS_motifFeature(unittest.TestCase):
                             self.assertEqual(value, getattr(mod_motif, key))
         cdsmotif = CDS_motifFeature(FeatureLocation(1, 10))
         #score, evalue should be numbers
-        try:
+        with self.assertRaises(ValueError):
             cdsmotif.score = '-a50'
-        except ValueError:
-            pass
-        try:
+        with self.assertRaises(ValueError):
             cdsmotif.evalue = 'a5.50E-08'
-        except ValueError:
-            pass
 
         #If valid qualifiers and values are added, We shouldn't get an error
         try:

@@ -39,24 +39,16 @@ class TestRecordMethods(unittest.TestCase):
         """Test the identifiers of empty Record"""
         rec = Record()
         #seq should be a instance of Bio.Seq.Seq
-        try:
+        with self.assertRaises(ValueError):
             rec.seq = 'FAKE'
-        except ValueError:
-            pass
         #description, name and id are strings
-        try:
+        with self.assertRaises(ValueError):
             rec.description = 123
-        except ValueError:
-            pass
-
-        try:
+        with self.assertRaises(ValueError):
             rec.name = 123
-        except ValueError:
-            pass
-        try:
+        with self.assertRaises(ValueError):
             rec.id = 123
-        except ValueError:
-            pass
+
         rec.id = "fake_id"
         rec.name = 'fake_name'
         rec.seq = Seq("FAKE")
@@ -66,10 +58,8 @@ class TestRecordMethods(unittest.TestCase):
         self.assertEqual(rec.seq, Seq("FAKE"))
         self.assertEqual(rec.description, 'fake_description')
         self.assertEqual(rec.annotations, {})
-        try:
+        with self.assertRaises(ValueError):
             rec.add_annotation(12, 34)
-        except ValueError:
-            pass
         rec.add_annotation('fake_key', 'fake_value')
         self.assertEqual(rec.annotations, {'fake_key': 'fake_value'})
 
@@ -98,10 +88,8 @@ class TestRecordMethods(unittest.TestCase):
 
     def test_from_biopython(self):
         """Test from_biopython() in Record"""
-        try:
+        with self.assertRaises(ValueError):
             rec = Record('fake_record')
-        except:
-            pass
         testfile = self.get_testfile()
         rec = Record.from_file(testfile)
         self.assertIsInstance(rec.from_biopython(rec._record), Record)
@@ -297,10 +285,8 @@ class TestRecordMethods(unittest.TestCase):
         rec.add_feature(new_pfam_domain)
         rec.add_feature(new_asdomain)
         clusters = rec.get_clusters()
-        try:
+        with self.assertRaises(TypeError):
             rec.add_feature(invalid_feature)
-        except TypeError:
-            pass
         self.assertEqual(no_of_clusters+1, len(clusters))
         self.assertEqual(no_of_cdss+1, len(rec.get_CDSs()))
         self.assertEqual(no_of_generics+1, len(rec.get_generics()))

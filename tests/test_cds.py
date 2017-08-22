@@ -12,8 +12,8 @@ class FakeResult(object):
     def __init__(self):
         """Initialise members with fake values"""
         self.query_id = 'fake_id'
-        self.evalue = 'fake_evalue'
-        self.bitscore = 'fake_bitscore'
+        self.evalue = '10000'
+        self.bitscore = '10000'
 
 class TestCDSFeature(unittest.TestCase):
     def get_testfile(self):
@@ -91,21 +91,6 @@ class TestCDSFeature(unittest.TestCase):
 
     def test_SecMetQualifier(self):
         """Test SecMetQualifier"""
-        try:
-            #clustertype should be a string instance
-            SecMetQualifier(clustertype=1)
-        except TypeError:
-            pass
-        try:
-            #domains should be a list instance
-            SecMetQualifier(domains='Invalid domains type')
-        except TypeError:
-            pass
-        try:
-            #kind should be a string instance
-            SecMetQualifier(kind=1)
-        except TypeError:
-            pass
         cds = CDSFeature(FeatureLocation(1, 10))
         self.assertEqual(None, cds.sec_met.clustertype)
         self.assertEqual(None, cds.sec_met.domains)
@@ -131,12 +116,21 @@ class TestCDSFeature(unittest.TestCase):
         self.assertEqual(["FAKE_NRPS/PKS Domain: "], cds.sec_met.nrpspks)
         self.assertEqual(['FAKE_ASF_predictions: '], cds.sec_met.asf_predictions)
         self.assertEqual(str(cds.sec_met), repr(cds.sec_met))
-        #sec_met feature should be an instance of SecMetQualifier
-        cds.sec_met = []
-        try:
+        with self.assertRaises(TypeError):
+            #sec_met feature should be an instance of SecMetQualifier
+            cds.sec_met = []
             cds.to_biopython()
-        except ValueError:
-            pass
+
+        #Test the failure cases in SecMetQualifier
+        with self.assertRaises(TypeError):
+            #clustertype should be a string
+            SecMetQualifier(clustertype=1)
+        with self.assertRaises(TypeError):
+            #domains should be a list
+            SecMetQualifier(domains='invalid_domains_type')
+        with self.assertRaises(TypeError):
+            #kind should be a str
+            SecMetQualifier(kind=1)
 
     def test_SecMetResult(self):
         """Test the SecMetResult class"""
@@ -145,12 +139,19 @@ class TestCDSFeature(unittest.TestCase):
         self.assertEqual(None, empty_result.evalue)
         self.assertEqual(None, empty_result.bitscore)
         self.assertEqual(None, empty_result.nseeds)
-
         result = SecMetResult(FakeResult(), "fake_seeds")
         self.assertEqual('fake_id', result.query_id)
-        self.assertEqual('fake_evalue', result.evalue)
-        self.assertEqual('fake_bitscore', result.bitscore)
+        self.assertEqual(10000.0, result.evalue)
+        self.assertEqual(10000.0, result.bitscore)
         self.assertEqual('fake_seeds', result.nseeds)
 
-        expected = "fake_id (E-value: fake_evalue, bitscore: fake_bitscore, seeds: fake_seeds)"
+        expected = "fake_id (E-value: 10000.0, bitscore: 10000.0, seeds: fake_seeds)"
         self.assertEqual(expected, repr(result), str(result))
+        #Test the failure cases in SecMetResult
+        result = SecMetResult()
+        with self.assertRaises(ValueError):
+            #evalue should be a float
+            result.evalue = 'invalid_evalue'
+        with self.assertRaises(ValueError):
+            #bitscore should be a float
+            result.bitscore = 'invalid_bitscore'

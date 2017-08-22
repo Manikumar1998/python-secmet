@@ -50,14 +50,10 @@ class TestClusterFeature(unittest.TestCase):
                             self.assertEqual(value, getattr(mod_cluster, key))
         cluster = ClusterFeature(FeatureLocation(100, 1000))
         #cutoff, extension should be numbers
-        try:
+        with self.assertRaises(TypeError):
             cluster.cutoff = '-a5000'
-        except TypeError:
-            pass
-        try:
+        with self.assertRaises(TypeError):
             cluster.extension = 'a5000'
-        except TypeError:
-            pass
 
         #If valid qualifiers and values are added, We shouldn't get an error
         try:
@@ -87,10 +83,9 @@ class TestClusterFeature(unittest.TestCase):
     def test_add_product(self):
         cluster = ClusterFeature(FeatureLocation(1000, 10000))
         self.assertEqual([], cluster.get_products())
-        try:
+        with self.assertRaises(TypeError):
+            #product should be an instance of str
             cluster.add_product(111)
-        except TypeError:
-            pass
         cluster.add_product('fake_product')
         self.assertEqual(['fake_product'], cluster.get_products())
 
@@ -99,6 +94,7 @@ class TestClusterFeature(unittest.TestCase):
         testfile = self.get_testfile()
         rec = Record.from_file(testfile)
         new_cluster = ClusterFeature(FeatureLocation(100, 500))
+        #Shouldn't throw exceptions if valid values are assigned
         try:
             new_cluster.cutoff = 300
         except:
