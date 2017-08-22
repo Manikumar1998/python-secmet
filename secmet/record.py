@@ -99,7 +99,7 @@ class GenericFeature(Feature):
 
         if feature:
             """Initialise class members(qualifiers) using SeqFeature object"""
-            self._qualifiers = feature.qualifiers
+            self._qualifiers = feature.qualifiers.copy()
             self.type = feature.type
             self.location = feature.location
             self.locus_tag = self._qualifiers.pop('locus_tag', [None])[0]
@@ -225,7 +225,7 @@ class CDSFeature(Feature):
 
         if feature:
             """Initialise class members(qualifiers) using SeqFeature object"""
-            self._qualifiers = feature.qualifiers
+            self._qualifiers = feature.qualifiers.copy()
             self.id = feature.id
             self.locus_tag = self._qualifiers.pop('locus_tag', [None])[0]
             self.product = self._qualifiers.pop('product', [None])[0]
@@ -356,7 +356,7 @@ class SubCDSFeature(Feature):
         self._qualifiers = {}
 
         if feature:
-            self._qualifiers = feature.qualifiers
+            self._qualifiers = feature.qualifiers.copy()
             self.locus_tag = self._qualifiers.pop('locus_tag', [None])[0]
             self.translation = self._qualifiers.pop('translation', [None])[0]
             self.asDomain_id = self._qualifiers.pop('asDomain_id', [None])[0]
@@ -412,13 +412,13 @@ class SubCDSFeature(Feature):
             self._qualifiers['translation'] = [str(self.translation)]
         if self.database:
             self._qualifiers['database'] = [str(self.database)]
-        if self.evalue:
+        if self.evalue is not None:
             self._qualifiers['evalue'] = [str(self.evalue)]
         if self.asDomain_id:
             self._qualifiers['asDomain_id'] = [str(self.asDomain_id)]
         if self.detection:
             self._qualifiers['detection'] = [str(self.detection)]
-        if self.score:
+        if self.score is not None:
             self._qualifiers['score'] = [str(self.score)]
         if self.label:
             self._qualifiers['label'] = [str(self.label)]
@@ -451,7 +451,7 @@ class CDS_motifFeature(SubCDSFeature):
 
         if feature:
             """Initialise class members(qualifiers) using SeqFeature object"""
-            self.motif = feature.qualifiers.pop('motif', [None])[0]
+            self.motif = feature.qualifiers.copy().pop('motif', [None])[0]
 
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
@@ -482,9 +482,10 @@ class PFAM_domain(SubCDSFeature):
 
         if feature:
             """Initialise class members(qualifiers) using SeqFeature object"""
-            self.domain = feature.qualifiers.pop('domain', [None])[0]
-            self.description = feature.qualifiers.pop('description', [None])[0]
-            self.db_xref = feature.qualifiers.pop('db_xref', [])
+            qualifiers = feature.qualifiers.copy()
+            self.domain = qualifiers.pop('domain', [None])[0]
+            self.description = qualifiers.pop('description', [None])[0]
+            self.db_xref = qualifiers.pop('db_xref', [])
 
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
@@ -519,9 +520,10 @@ class aSDomain(SubCDSFeature):
 
         if feature:
             """Initialise class members(qualifiers) using SeqFeature object"""
-            self.domain = feature.qualifiers.pop('domain', [None])[0]
-            self.domain_subtype = feature.qualifiers.pop('domain_subtype', [None])[0]
-            self.specificity = feature.qualifiers.pop('specificity', [])
+            qualifiers = feature.qualifiers.copy()
+            self.domain = qualifiers.pop('domain', [None])[0]
+            self.domain_subtype = qualifiers.pop('domain_subtype', [None])[0]
+            self.specificity = qualifiers.pop('specificity', [])
 
     def to_biopython(self):
         """Returns a Bio.SeqFeature.SeqFeature object with all its members"""
@@ -564,7 +566,7 @@ class ClusterFeature(Feature):
 
         if feature:
             """Initialise class members(qualifiers) using SeqFeature object"""
-            self._qualifiers = feature.qualifiers
+            self._qualifiers = feature.qualifiers.copy()
             self.contig_edge = self._qualifiers.pop('contig_edge', [None])[0]
             self.products = self._qualifiers.pop('product', [])
             self.structure = self._qualifiers.pop('structure', [None])[0]
@@ -642,9 +644,9 @@ class ClusterFeature(Feature):
             self._qualifiers['note'].append(self.detection)
         if self.notes:
             self._qualifiers['note'].extend(self.notes)
-        if self.cutoff:
+        if self.cutoff is not  None:
             self._qualifiers['cutoff'] = [str(self.cutoff)]
-        if self.extension:
+        if self.extension is not None:
             self._qualifiers['extension'] = [str(self.extension)]
         if self.products:
             self._qualifiers['product'] = self.products
