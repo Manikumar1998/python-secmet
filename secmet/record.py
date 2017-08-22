@@ -25,8 +25,10 @@ def find_new_cluster_pos(clusters, target_cluster):
         param clusters: A list of all existing ClusterFeature(s) in the record
         param target_cluster: An instance of ClusterFeature
     """
+    #If no clusters are available return 0
     if not clusters:
         return 0
+    #Search for the index position in clusters list using cluster start positions
     cluster_start_locations = [cluster.location.start for cluster in clusters]
     return bisect_left(cluster_start_locations, target_cluster.location.start)
 
@@ -36,24 +38,36 @@ def find_cluster_of_new_cds(clusters, new_cds):
         param clusters: A list of all existing ClusterFeature(s) in the record
         param new_cds: An instance of CDSFeature
     """
+    #If no clusters are available return
     if not clusters:
         return
+    #If new_cds is not within the clusters return
     if new_cds.location.end < clusters[0].location.start or \
        new_cds.location.start > clusters[len(clusters)-1].location.end:
         return
+    #Search for the cluster feature
     else:
+        #Segregate the start locations and end locations of sorted clusters
         cluster_starts = [cluster.location.start for cluster in clusters]
         cluster_ends = [cluster.location.end for cluster in clusters]
-        if bisect_left(cluster_starts, new_cds.location.start)-1 == bisect_left(cluster_ends, new_cds.location.start):
-            index = bisect_left(cluster_ends, new_cds.location.start)
-            clusters[index].cdss.append(new_cds)
-            new_cds.cluster = clusters[index]
 
-        if bisect_left(cluster_starts, new_cds.location.end)-1 == bisect_left(cluster_ends, new_cds.location.end):
-            index = bisect_left(cluster_ends, new_cds.location.end)
-            clusters[index].cdss.append(new_cds)
-            new_cds.cluster = clusters[index]
+        #Compare the new_cds start location with clusters starts and end locations
+        cluster_starts_index = bisect_left(cluster_starts, new_cds.location.start)
+        cluster_ends_index = bisect_left(cluster_ends, new_cds.location.start)
+        if cluster_starts_index-1 == cluster_ends_index:
+            #new_cds within start and end positions of a cluster
+            clusters[cluster_ends_index].cdss.append(new_cds)
+            new_cds.cluster = clusters[cluster_ends_index]
+            return
 
+        #Compare using new_cds end location with clusters start and end locations
+        cluster_starts_index = bisect_left(cluster_starts, new_cds.location.end)
+        cluster_ends_index = bisect_left(cluster_ends, new_cds.location.end)
+        if cluster_starts_index-1 == cluster_ends_index:
+            #new_cds within start and end positions of a cluster
+            clusters[cluster_ends_index].cdss.append(new_cds)
+            new_cds.cluster = clusters[cluster_ends_index]
+            return
 
 class Feature(object):
     """A Feature super class that extends to different subclasses"""
@@ -110,51 +124,106 @@ class GenericFeature(Feature):
             self.description = self._qualifiers.pop('description', [None])[0]
             self.sec_met = self._qualifiers.pop('sec_met', [])
             self.notes = self._qualifiers.pop('note', [])
+            if 'score' in self._qualifiers:
+                self.score = self._qualifiers('score')[0]
+                del self._qualifiers['score']
+            if 'evalue' in self._qualifiers:
+                self.evalue = self._qualifiers['evalue'][0]
+                del self._qualifiers['evalue']
+            if 'probability' in self._qualifiers:
+                self.probability = self._qualifiers['probability'][0]
+                del self._qualifiers['probability']
         else:
             self.location = f_location
             if not isinstance(f_type, str):
                 raise ValueError('Type of the feature should be a string')
             self.type = f_type
 
+    #Check for a valid score qualifier before assigning
+    def _get_score(self):
+        try:
+            return self.__score
+        except:
+            return None
+    def _set_score(self, value):
+        try:
+            self.__score = float(value)
+        except ValueError:
+            raise ValueError('Invalid score value')
+    score = property(_get_score, _set_score)
+
+    #Check for a valid evalue qualifier before assigning
+    def _get_evalue(self):
+        try:
+            return self.__evalue
+        except:
+            return None
+    def _set_evalue(self, value):
+        try:
+            self.__evalue = float(value)
+        except ValueError:
+            raise ValueError('Invalid evalue value')
+    evalue = property(_get_evalue, _set_evalue)
+
+    def _get_probaility(self):
+        try:
+            return self.__probability
+        except:
+            return None
+    def _set_probability(self, value):
+        try:
+            self.__probability = float(value)
+        except ValueError:
+            raise ValueError('Invalid probability value')
+    probability = property(_get_probaility, _set_probability)
+
     def add_qualifier(self, category, info):
-        """Adds a qualifier to qualifiers dictionary"""
+        """Adds a qualifier to qualifiers dictionary
+        param category: An instance of str
+        param info: An instance of str or list or a number
+        """
+        #Check for valid category and info type
         if not isinstance(category, str):
             if not isinstance(info, (str, list)):
                 if not isinstance(info, (int, float)):
                     raise TypeError("Qualifier category should be str and value should be str or list or number")
                 else:
                     info = str(info)
-        if category in ['evalue', 'score', 'probability']:
-            try:
-                info = float(info)
-            except:
-                raise ValueError('%s should be a number'% category)
-        if hasattr(self, category):
-            if isinstance(getattr(self, category), list):
+
+        #Check and return if category is present as a member of the class
+        elif hasattr(self, category):
+            if category == 'sec_met':
                 if isinstance(info, list):
-                    getattr(self, category).extend(info)
+                    self.sec_met.extend(info)
                 else:
-                    getattr(self, category).append(info)
+                    self.sec_met.append(info)
             else:
                 setattr(self, category, info)
+
+        #If not a member of class, check in _qualifiers
         else:
-            if category not in self._qualifiers:
+            if category in self._qualifiers:
+                if isinstance(info, list):
+                    self._qualifiers[category].extend(info)
+                else:
+                    self._qualifiers[category].append(info)
+            else:
                 if isinstance(info, list):
                     self._qualifiers[category] = info
                 else:
                     self._qualifiers[category] = [info]
-            else:
-                self._qualifiers[category].append(info)
         return None
 
     def get_qualifier(self, category):
         """Returns a qualifier of given category"""
+        #Check for the category in _qualifiers
         if category in self._qualifiers:
             return self._qualifiers[category]
         elif category.lower() in self._qualifiers:
             return self._qualifiers[category.lower()]
         elif category.upper() in self._qualifiers:
             return self._qualifiers[category.upper()]
+        #If not found, the check if it is a member of the class
         else:
             if hasattr(self, category):
                 if getattr(self, category):
@@ -179,6 +248,12 @@ class GenericFeature(Feature):
             new_Generic.qualifiers['seq'] = [str(self.seq)]
         if self.description:
             new_Generic.qualifiers['description'] = [str(self.description)]
+        if self.score is not None:
+            new_Generic.qualifiers['score'] = [str(self.score)]
+        if self.evalue is not None:
+            new_Generic.qualifiers['evalue'] = [str(self.evalue)]
+        if self.probability is not None:
+            new_Generic.qualifiers['probability'] = [str(self.probability)]
         if self.sec_met:
             new_Generic.qualifiers['sec_met'] = self.sec_met
         if self.notes:
@@ -246,6 +321,7 @@ class CDSFeature(Feature):
             self.location = feature.location
             if 'sec_met' in self._qualifiers:
                 self.sec_met = self._map_sec_met_list_to_SecMetQualifier(self._qualifiers['sec_met'])
+                del self._qualifiers['sec_met']
         else:
             self.location = f_location
 
@@ -586,8 +662,10 @@ class ClusterFeature(Feature):
                 self.notes = note_list_copy
             if 'cutoff' in self._qualifiers:
                 self.cutoff = int(self._qualifiers['cutoff'][0])
+                del self._qualifiers['cutoff']
             if 'extension' in self._qualifiers:
                 self.extension = int(self._qualifiers['extension'][0])
+                del self._qualifiers['extension']
             self.location = feature.location
         else:
             self.location = f_location
@@ -697,7 +775,6 @@ class Record(object):
     @classmethod
     def from_file(cls, filename):
         """Initialise a record from a file
-
         :param string filename:    file name of the file to read
         """
         filetype = filename.split('.')[-1]
@@ -778,7 +855,7 @@ class Record(object):
             return {}
     def add_annotation(self, key, value):
         """Adding annotations in Record"""
-        if not (isinstance(key, str) and (isinstance(value, str) or isinstance(value, list))):
+        if not isinstance(key, str) or not isinstance(value, (str, list)):
             raise ValueError('Key and Value are not in right format')
         self._record.annotations[key] = value
 
@@ -980,10 +1057,12 @@ class SecMetQualifier(list):
         return self._sec_met
 
 class SecMetResult(object):
+    """A SecMetResult class to store a domain qualifier"""
     def __init__(self, res=None, nseeds=None):
         self.query_id = None
         self.nseeds = None
         if res and nseeds:
+            #Initialise using arguments
             self.query_id = res.query_id
             self.evalue = res.evalue
             self.bitscore = res.bitscore
