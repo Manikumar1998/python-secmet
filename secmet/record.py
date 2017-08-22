@@ -73,7 +73,7 @@ class Feature(object):
 
     def extract(self, parent_seq):
         """Return Feature's seq from its parent's seq"""
-        if self.location is None:
+        if not self.location:
             raise ValueError("Location is None. Extracting Failed")
         return self.location.extract(parent_seq)
 
@@ -125,7 +125,9 @@ class GenericFeature(Feature):
                 else:
                     info = str(info)
         if category in ['evalue', 'score', 'probability']:
-            if not (((info.replace('.', '')).replace('E-', '')).replace('-', '')).replace('+', '').isdigit():
+            try:
+                info = float(info)
+            except:
                 raise ValueError('%s should be a number'% category)
         if hasattr(self, category):
             if isinstance(getattr(self, category), list):
@@ -230,7 +232,7 @@ class CDSFeature(Feature):
             self.protein_id = self._qualifiers.pop('protein_id', [None])[0]
             self.gene = self._qualifiers.pop('gene', [None])[0]
             self.translation = self._qualifiers.pop('translation', [None])[0]
-            self.notes = self._qualifiers.pop('note',[])
+            self.notes = self._qualifiers.pop('note', [])
             self.EC_number = self._qualifiers.pop('EC_number', [])
             self.transl_table = self._qualifiers.pop('transl_table', [None])[0]
             self.source = self._qualifiers.pop('source', [None])[0]
@@ -560,48 +562,30 @@ class ClusterFeature(Feature):
         self.clusterblast = None
         self.cdss = []
 
-        if feature is not None:
+        if feature:
             """Initialise class members(qualifiers) using SeqFeature object"""
             self._qualifiers = feature.qualifiers
-
-            if 'cutoff' in self._qualifiers:
-                self.cutoff = int(self._qualifiers['cutoff'][0])
-
-            if 'extension' in self._qualifiers:
-                self.extension = int(self._qualifiers['extension'][0])
-
-            if 'contig_edge' in self._qualifiers:
-                self.contig_edge = self._qualifiers['contig_edge'][0]
-
-            if 'note' in self._qualifiers:
-                note_list = self._qualifiers['note']
-                note_list_copy = note_list[:]
-                for  value in note_list:
+            self.contig_edge = self._qualifiers.pop('contig_edge', [None])[0]
+            self.products = self._qualifiers.pop('product', [])
+            self.structure = self._qualifiers.pop('structure', [None])[0]
+            self.probability = self._qualifiers.pop('probability', [None])[0]
+            self.subclusterblast = self._qualifiers.pop('subclusterblast', [])
+            self.knownclusterblast = self._qualifiers.pop('knownclusterblast', [])
+            self.clusterblast = self._qualifiers.pop('clusterblast', [])
+            self.notes = self._qualifiers.pop('note', [])
+            if self.notes:
+                note_list_copy = self.notes[:]
+                for  value in self.notes:
                     if value.startswith('Cluster number'):
-                        self.clusternumber = int(value.split(':')[1])
                         note_list_copy.remove(value)
                     if value.startswith('Detection rule(s)'):
                         self.detection = value
                         note_list_copy.remove(value)
-                self.notes.extend(note_list_copy)
-
-            if 'product' in self._qualifiers:
-                self.products = self._qualifiers['product']
-
-            if 'structure' in self._qualifiers:
-                self.structure = self._qualifiers['structure'][0]
-
-            if 'probability' in self._qualifiers:
-                self.probability = self._qualifiers['probability'][0]
-
-            if 'subclusterblast' in self._qualifiers:
-                self.subclusterblast = self._qualifiers['subclusterblast']
-
-            if 'clusterblast' in self._qualifiers:
-                self.clusterblast = self._qualifiers['clusterblast']
-
-            if 'knownclusterblast' in self._qualifiers:
-                self.knownclusterblast = self._qualifiers['knownclusterblast']
+                self.notes = note_list_copy
+            if 'cutoff' in self._qualifiers:
+                self.cutoff = int(self._qualifiers['cutoff'][0])
+            if 'extension' in self._qualifiers:
+                self.extension = int(self._qualifiers['extension'][0])
             self.location = feature.location
         else:
             self.location = f_location
